@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{.title}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            brand: {
+              50:  '#f0f7ff',
+              100: '#e0effe',
+              200: '#bae0fd',
+              300: '#7cc5fb',
+              400: '#38a5f6',
+              500: '#0e87e3',
+              600: '#0269c1',
+              700: '#03539c',
+              800: '#074680',
+              900: '#0c3b6a',
+              950: '#082549',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .sidebar-link { @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150; }
+    .sidebar-link:hover { @apply bg-brand-700 text-white; }
+    .sidebar-link.active { @apply bg-white text-brand-700 font-semibold shadow-sm; }
+    .sidebar-link:not(.active) { @apply text-brand-100; }
+    [hx-indicator].htmx-request { opacity: 0.5; }
+  </style>
+  {{block "head_extra" .}}{{end}}
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+  {{block "body" .}}{{end}}
+</body>
+</html>

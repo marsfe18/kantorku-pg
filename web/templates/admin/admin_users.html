@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{.title}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            brand: {
+              50:'#f0f7ff',100:'#e0effe',200:'#bae0fd',300:'#7cc5fb',
+              400:'#38a5f6',500:'#0e87e3',600:'#0269c1',700:'#03539c',
+              800:'#074680',900:'#0c3b6a',950:'#082549',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .sidebar-link { display:flex; align-items:center; gap:0.75rem; padding:0.625rem 1rem; border-radius:0.5rem; font-size:0.875rem; font-weight:500; transition:all 0.15s; }
+    .sidebar-link:hover { background:#074680; color:white; }
+    .sidebar-link.active { background:white; color:#03539c; font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+    .sidebar-link:not(.active) { color:#bae0fd; }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:50; align-items:center; justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .chip { display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; padding:2px 8px; border-radius:9999px; font-weight:500; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<aside class="fixed inset-y-0 left-0 w-64 bg-brand-800 flex flex-col z-30">
+  <div class="flex items-center gap-3 px-6 py-5 border-b border-brand-700">
+    <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
+      <svg class="w-5 h-5 text-brand-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+      </svg>
+    </div>
+    <div>
+      <div class="text-white font-bold text-base leading-tight">KantorKu</div>
+      <div class="text-brand-300 text-xs">Pengelolaan Barang</div>
+    </div>
+  </div>
+  <div class="px-4 py-4 border-b border-brand-700">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+        {{if .user}}{{slice .user.FullName 0 1}}{{end}}
+      </div>
+      <div class="min-w-0">
+        <div class="text-white text-sm font-semibold truncate">{{if .user}}{{.user.FullName}}{{end}}</div>
+        <div class="flex gap-1 mt-0.5 flex-wrap">
+          {{if .claims}}{{range .claims.Roles}}
+          <span class="text-xs bg-brand-600/60 text-brand-200 px-1.5 py-0.5 rounded">{{roleLabel .}}</span>
+          {{end}}{{end}}
+        </div>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+    <p class="text-brand-400 text-xs font-semibold uppercase tracking-wider px-4 mb-2">Menu Admin</p>
+    <a href="/admin/dashboard" class="sidebar-link">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+      Dashboard
+    </a>
+    <a href="/admin/users" class="sidebar-link active">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+      Kelola Pengguna
+    </a>
+  </nav>
+  <div class="px-3 py-4 border-t border-brand-700">
+    <form action="/logout" method="POST">
+      <button type="submit" class="sidebar-link w-full text-left" style="color:#fca5a5" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background=''">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+        Keluar
+      </button>
+    </form>
+  </div>
+</aside>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<main class="ml-64 min-h-screen">
+  <header class="bg-white border-b border-slate-200 px-8 py-4 sticky top-0 z-20 flex items-center justify-between">
+    <div>
+      <h1 class="font-bold text-slate-800 text-lg">Kelola Pengguna</h1>
+      <p class="text-slate-400 text-xs mt-0.5">Manajemen akun, role, tim, dan persetujuan</p>
+    </div>
+    <button onclick="openModal('modal-create')"
+      class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+      Tambah Pengguna
+    </button>
+  </header>
+
+  <div class="p-8">
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed top-6 right-6 z-50 bg-white border rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 text-sm font-medium min-w-64"></div>
+
+    <!-- Filter tabs -->
+    <div class="flex gap-2 mb-6">
+      <button onclick="filterTable('all', this)" class="filter-btn text-sm font-semibold px-4 py-2 rounded-lg bg-brand-600 text-white">Semua</button>
+      <button onclick="filterTable('pending', this)" class="filter-btn text-sm font-medium px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Menunggu Approval</button>
+      <button onclick="filterTable('approved', this)" class="filter-btn text-sm font-medium px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Sudah Disetujui</button>
+      <button onclick="filterTable('inactive', this)" class="filter-btn text-sm font-medium px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Nonaktif</button>
+    </div>
+
+    <!-- Table card -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-4">
+        <div class="flex-1 relative">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input type="text" id="search-input" placeholder="Cari nama, username, atau email..."
+            oninput="searchTable(this.value)"
+            class="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-slate-50 focus:bg-white" />
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-100">
+              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">Pengguna</th>
+              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Role</th>
+              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Tim</th>
+              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Status</th>
+              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Terdaftar</th>
+              <th class="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">Aksi</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {{range .users}}
+            <tr class="hover:bg-slate-50 transition user-row"
+                id="row-{{.ID}}"
+                data-approved="{{if .IsApproved}}true{{else}}false{{end}}"
+                data-active="{{if .IsActive}}true{{else}}false{{end}}"
+                data-search="{{.FullName}} {{.Username}} {{.Email}}">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-sm flex-shrink-0">
+                    {{slice .FullName 0 1}}
+                  </div>
+                  <div>
+                    <p class="font-semibold text-slate-800 text-sm">{{.FullName}}</p>
+                    <p class="text-slate-400 text-xs">@{{.Username}}</p>
+                    <p class="text-slate-400 text-xs">{{.Email}}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-4">
+                <div class="flex flex-wrap gap-1" id="roles-{{.ID}}">
+                  {{range .Roles}}
+                  <span class="chip {{if eq . "admin"}}bg-red-100 text-red-700{{else if eq . "supervisor"}}bg-purple-100 text-purple-700{{else}}bg-green-100 text-green-700{{end}}">
+                    {{roleLabel .}}
+                    {{if ne . "pegawai"}}
+                    <button onclick="removeRole('{{$.ID}}','{{.}}')" title="Hapus role" class="ml-0.5 hover:opacity-70">×</button>
+                    {{end}}
+                  </span>
+                  {{end}}
+                </div>
+              </td>
+              <td class="px-4 py-4">
+                <div class="flex flex-wrap gap-1" id="teams-{{.ID}}">
+                  {{if .Teams}}
+                    {{range .Teams}}
+                    <span class="chip bg-slate-100 text-slate-600">
+                      {{teamLabel .}}
+                      <button onclick="removeTeam('{{$.ID}}','{{.}}')" title="Hapus tim" class="ml-0.5 hover:opacity-70">×</button>
+                    </span>
+                    {{end}}
+                  {{else}}
+                    <span class="text-slate-300 text-xs">—</span>
+                  {{end}}
+                </div>
+              </td>
+              <td class="px-4 py-4">
+                {{if not .IsActive}}
+                <span class="chip bg-slate-100 text-slate-500">Nonaktif</span>
+                {{else if not .IsApproved}}
+                <span class="chip bg-amber-100 text-amber-700">Menunggu</span>
+                {{else}}
+                <span class="chip bg-green-100 text-green-700">Aktif</span>
+                {{end}}
+              </td>
+              <td class="px-4 py-4 text-slate-400 text-xs">{{formatDate .CreatedAt}}</td>
+              <td class="px-6 py-4">
+                <div class="flex items-center justify-end gap-1">
+                  {{if not .IsApproved}}
+                  <button onclick="approveUser('{{.ID}}', '{{.FullName}}')"
+                    class="text-xs bg-brand-600 hover:bg-brand-700 text-white font-semibold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    Setujui
+                  </button>
+                  {{end}}
+                  <!-- Edit button -->
+                  <button onclick="openEditModal('{{.ID}}','{{.FullName}}',{{json .Roles}},{{json .Teams}})"
+                    title="Edit role & tim"
+                    class="p-1.5 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <!-- Password button -->
+                  <button onclick="openPasswordModal('{{.ID}}','{{.FullName}}')"
+                    title="Ganti password"
+                    class="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                  </button>
+                  <!-- Toggle active -->
+                  <button onclick="toggleActive('{{.ID}}','{{.FullName}}',{{if .IsActive}}true{{else}}false{{end}})"
+                    title="{{if .IsActive}}Nonaktifkan{{else}}Aktifkan{{end}} akun"
+                    class="p-1.5 rounded-lg text-slate-400 {{if .IsActive}}hover:text-red-500 hover:bg-red-50{{else}}hover:text-green-600 hover:bg-green-50{{end}} transition">
+                    {{if .IsActive}}
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                    </svg>
+                    {{else}}
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {{end}}
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {{else}}
+            <tr>
+              <td colspan="6" class="px-6 py-12 text-center text-slate-400 text-sm">Belum ada pengguna terdaftar</td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ═══════════════════ MODAL: BUAT PENGGUNA ═══════════════════ -->
+<div id="modal-create" class="modal-overlay" onclick="closeModalOutside(event,'modal-create')">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+    <div class="bg-gradient-to-r from-brand-700 to-brand-900 px-6 py-5 flex items-center justify-between">
+      <div>
+        <h2 class="text-white font-bold text-base">Tambah Pengguna Baru</h2>
+        <p class="text-brand-200 text-xs mt-0.5">Akun langsung aktif tanpa persetujuan</p>
+      </div>
+      <button onclick="closeModal('modal-create')" class="text-brand-200 hover:text-white">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="px-6 py-6 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap *</label>
+          <input id="c-fullname" type="text" placeholder="Nama lengkap" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 focus:bg-white" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Username *</label>
+          <input id="c-username" type="text" placeholder="username" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 focus:bg-white" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Email *</label>
+        <input id="c-email" type="email" placeholder="email@contoh.com" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 focus:bg-white" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Password * <span class="font-normal text-slate-400">(min. 6 karakter)</span></label>
+        <input id="c-password" type="password" placeholder="Password awal" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 focus:bg-white" />
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-2">Role <span class="font-normal text-slate-400">(Pegawai selalu aktif)</span></label>
+          <div class="space-y-1.5">
+            <label class="flex items-center gap-2 text-sm text-slate-500 cursor-not-allowed">
+              <input type="checkbox" checked disabled class="rounded" /> Pegawai
+            </label>
+            <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <input type="checkbox" id="c-role-supervisor" value="supervisor" class="rounded" /> Supervisor
+            </label>
+            <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <input type="checkbox" id="c-role-admin" value="admin" class="rounded" /> Admin
+            </label>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-2">Tim</label>
+          <div class="space-y-1.5">
+            {{range .allTeams}}
+            <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <input type="checkbox" class="c-team rounded" value="{{.}}" /> {{teamLabel .}}
+            </label>
+            {{end}}
+          </div>
+        </div>
+      </div>
+      <div id="create-error" class="hidden text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2"></div>
+    </div>
+    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+      <button onclick="closeModal('modal-create')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition">Batal</button>
+      <button onclick="submitCreateUser()" class="px-5 py-2 text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition">
+        Buat Akun
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL: EDIT ROLE & TIM ═══════════════════ -->
+<div id="modal-edit" class="modal-overlay" onclick="closeModalOutside(event,'modal-edit')">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+    <div class="bg-gradient-to-r from-slate-700 to-slate-900 px-6 py-5 flex items-center justify-between">
+      <div>
+        <h2 class="text-white font-bold text-base">Edit Role & Tim</h2>
+        <p id="edit-name" class="text-slate-300 text-xs mt-0.5"></p>
+      </div>
+      <button onclick="closeModal('modal-edit')" class="text-slate-300 hover:text-white">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="px-6 py-6 space-y-5">
+      <div>
+        <p class="text-xs font-semibold text-slate-600 mb-3">Role <span class="font-normal text-slate-400">(Pegawai tidak dapat dihapus)</span></p>
+        <div class="space-y-2">
+          <label class="flex items-center gap-2 text-sm text-slate-500 cursor-not-allowed">
+            <input type="checkbox" checked disabled class="rounded" /> Pegawai
+          </label>
+          <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+            <input type="checkbox" id="e-role-supervisor" value="supervisor" onchange="toggleRole(this)" class="rounded" /> Supervisor
+          </label>
+          <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+            <input type="checkbox" id="e-role-admin" value="admin" onchange="toggleRole(this)" class="rounded" /> Admin
+          </label>
+        </div>
+      </div>
+      <div class="border-t border-slate-100 pt-5">
+        <p class="text-xs font-semibold text-slate-600 mb-3">Tim</p>
+        <div class="grid grid-cols-2 gap-2">
+          {{range .allTeams}}
+          <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+            <input type="checkbox" class="e-team rounded" value="{{.}}" onchange="toggleTeam(this)" /> {{teamLabel .}}
+          </label>
+          {{end}}
+        </div>
+      </div>
+    </div>
+    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+      <button onclick="closeModal('modal-edit')" class="px-5 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-800 text-white rounded-lg transition">Selesai</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL: GANTI PASSWORD ═══════════════════ -->
+<div id="modal-password" class="modal-overlay" onclick="closeModalOutside(event,'modal-password')">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+    <div class="bg-gradient-to-r from-amber-600 to-amber-800 px-6 py-5 flex items-center justify-between">
+      <div>
+        <h2 class="text-white font-bold text-base">Ganti Password</h2>
+        <p id="pwd-name" class="text-amber-200 text-xs mt-0.5"></p>
+      </div>
+      <button onclick="closeModal('modal-password')" class="text-amber-200 hover:text-white">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="px-6 py-6">
+      <label class="block text-xs font-semibold text-slate-600 mb-2">Password Baru <span class="font-normal text-slate-400">(min. 6 karakter)</span></label>
+      <input id="pwd-input" type="password" placeholder="Password baru" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 bg-slate-50 focus:bg-white" />
+      <div id="pwd-error" class="hidden text-red-600 text-sm mt-2"></div>
+    </div>
+    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+      <button onclick="closeModal('modal-password')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">Batal</button>
+      <button onclick="submitChangePassword()" class="px-5 py-2 text-sm font-semibold bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Helpers ──────────────────────────────────────────────────────
+let activeFilter = 'all';
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModalOutside(e, id) { if (e.target.id === id) closeModal(id); }
+
+function showToast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.className = `fixed top-6 right-6 z-50 bg-white border rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 text-sm font-medium min-w-64 ${ok ? 'border-green-300 text-green-700' : 'border-red-300 text-red-600'}`;
+  t.innerHTML = `<span>${ok ? '✅' : '❌'}</span><span>${msg}</span>`;
+  t.classList.remove('hidden');
+  setTimeout(() => t.classList.add('hidden'), 3000);
+}
+
+async function doPost(url, body) {
+  const fd = new FormData();
+  for (const [k, v] of Object.entries(body)) fd.append(k, v);
+  const res = await fetch(url, { method: 'POST', body: fd });
+  return { ok: res.ok, data: await res.json() };
+}
+
+function filterTable(filter, btn) {
+  activeFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.remove('bg-brand-600','text-white');
+    b.classList.add('bg-white','border','border-slate-200','text-slate-600');
+  });
+  btn.classList.add('bg-brand-600','text-white');
+  btn.classList.remove('bg-white','border','border-slate-200','text-slate-600');
+  applyFilters();
+}
+
+function searchTable(val) { applyFilters(val); }
+
+function applyFilters(search) {
+  if (search === undefined) search = document.getElementById('search-input').value;
+  document.querySelectorAll('.user-row').forEach(row => {
+    const approved = row.dataset.approved === 'true';
+    const active = row.dataset.active === 'true';
+    const matchSearch = !search || row.dataset.search.toLowerCase().includes(search.toLowerCase());
+    let matchFilter = true;
+    if (activeFilter === 'pending') matchFilter = !approved && active;
+    else if (activeFilter === 'approved') matchFilter = approved && active;
+    else if (activeFilter === 'inactive') matchFilter = !active;
+    row.style.display = matchFilter && matchSearch ? '' : 'none';
+  });
+}
+
+// ── Approve ──────────────────────────────────────────────────────
+async function approveUser(id, name) {
+  if (!confirm(`Setujui akun ${name}?`)) return;
+  const { ok, data } = await doPost(`/admin/users/${id}/approve`, {});
+  if (ok) {
+    showToast(data.message);
+    const row = document.getElementById(`row-${id}`);
+    if (row) {
+      row.dataset.approved = 'true';
+      // Update status badge
+      const td = row.querySelector('td:nth-child(4)');
+      if (td) td.innerHTML = '<span class="chip bg-green-100 text-green-700">Aktif</span>';
+      // Remove approve button
+      const btn = row.querySelector('button[onclick*="approveUser"]');
+      if (btn) btn.remove();
+    }
+  } else {
+    showToast(data.error || 'Gagal', false);
+  }
+}
+
+// ── Toggle Active ─────────────────────────────────────────────────
+async function toggleActive(id, name, currentActive) {
+  const action = currentActive ? 'Nonaktifkan' : 'Aktifkan';
+  if (!confirm(`${action} akun ${name}?`)) return;
+  const { ok, data } = await doPost(`/admin/users/${id}/toggle-active`, {});
+  if (ok) {
+    showToast(data.message);
+    const row = document.getElementById(`row-${id}`);
+    if (row) { row.dataset.active = data.is_active ? 'true' : 'false'; }
+    // Reload row to reflect new state
+    setTimeout(() => location.reload(), 800);
+  } else {
+    showToast(data.error || 'Gagal', false);
+  }
+}
+
+// ── Create User ──────────────────────────────────────────────────
+async function submitCreateUser() {
+  const fullName = document.getElementById('c-fullname').value.trim();
+  const username = document.getElementById('c-username').value.trim();
+  const email = document.getElementById('c-email').value.trim();
+  const password = document.getElementById('c-password').value;
+  const errEl = document.getElementById('create-error');
+
+  if (!fullName || !username || !email || !password) {
+    errEl.textContent = 'Semua field wajib diisi';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append('full_name', fullName);
+  fd.append('username', username);
+  fd.append('email', email);
+  fd.append('password', password);
+  fd.append('roles', 'pegawai');
+  if (document.getElementById('c-role-supervisor').checked) fd.append('roles', 'supervisor');
+  if (document.getElementById('c-role-admin').checked) fd.append('roles', 'admin');
+  document.querySelectorAll('.c-team:checked').forEach(cb => fd.append('teams', cb.value));
+
+  const res = await fetch('/admin/users', { method: 'POST', body: fd });
+  const data = await res.json();
+  if (res.ok) {
+    closeModal('modal-create');
+    showToast(data.message);
+    setTimeout(() => location.reload(), 800);
+  } else {
+    errEl.textContent = data.error || 'Terjadi kesalahan';
+    errEl.classList.remove('hidden');
+  }
+}
+
+// ── Edit Role & Tim ───────────────────────────────────────────────
+let editUserID = '';
+
+function openEditModal(id, name, roles, teams) {
+  editUserID = id;
+  document.getElementById('edit-name').textContent = name;
+  document.getElementById('e-role-supervisor').checked = roles.includes('supervisor');
+  document.getElementById('e-role-admin').checked = roles.includes('admin');
+  document.querySelectorAll('.e-team').forEach(cb => {
+    cb.checked = teams && teams.includes(cb.value);
+  });
+  openModal('modal-edit');
+}
+
+async function toggleRole(cb) {
+  const role = cb.value;
+  const url = cb.checked
+    ? `/admin/users/${editUserID}/roles/add`
+    : `/admin/users/${editUserID}/roles/remove`;
+  const { ok, data } = await doPost(url, { role });
+  if (!ok) {
+    showToast(data.error || 'Gagal', false);
+    cb.checked = !cb.checked; // revert
+  } else {
+    showToast(data.message);
+    refreshUserRoles(editUserID);
+  }
+}
+
+async function toggleTeam(cb) {
+  const team = cb.value;
+  const url = cb.checked
+    ? `/admin/users/${editUserID}/teams/add`
+    : `/admin/users/${editUserID}/teams/remove`;
+  const { ok, data } = await doPost(url, { team });
+  if (!ok) {
+    showToast(data.error || 'Gagal', false);
+    cb.checked = !cb.checked;
+  } else {
+    showToast(data.message);
+  }
+}
+
+function refreshUserRoles(id) {
+  // Visual refresh akan dilakukan saat reload, tapi kita bisa partial update juga
+  // For simplicity: akan reload saat modal ditutup
+}
+
+// ── Password ──────────────────────────────────────────────────────
+let pwdUserID = '';
+
+function openPasswordModal(id, name) {
+  pwdUserID = id;
+  document.getElementById('pwd-name').textContent = name;
+  document.getElementById('pwd-input').value = '';
+  document.getElementById('pwd-error').classList.add('hidden');
+  openModal('modal-password');
+}
+
+async function submitChangePassword() {
+  const pwd = document.getElementById('pwd-input').value;
+  const errEl = document.getElementById('pwd-error');
+  if (pwd.length < 6) {
+    errEl.textContent = 'Password minimal 6 karakter';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  const { ok, data } = await doPost(`/admin/users/${pwdUserID}/password`, { password: pwd });
+  if (ok) {
+    closeModal('modal-password');
+    showToast(data.message);
+  } else {
+    errEl.textContent = data.error || 'Gagal mengubah password';
+    errEl.classList.remove('hidden');
+  }
+}
+
+// Remove role inline (from chip x button)
+async function removeRole(userID, role) {
+  if (!confirm(`Hapus role ${role} dari pengguna ini?`)) return;
+  const { ok, data } = await doPost(`/admin/users/${userID}/roles/remove`, { role });
+  if (ok) {
+    showToast(data.message);
+    setTimeout(() => location.reload(), 600);
+  } else {
+    showToast(data.error || 'Gagal', false);
+  }
+}
+
+// Remove team inline
+async function removeTeam(userID, team) {
+  const { ok, data } = await doPost(`/admin/users/${userID}/teams/remove`, { team });
+  if (ok) {
+    showToast(data.message);
+    setTimeout(() => location.reload(), 600);
+  } else {
+    showToast(data.error || 'Gagal', false);
+  }
+}
+</script>
+</body>
+</html>

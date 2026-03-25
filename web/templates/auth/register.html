@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{.title}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            brand: {
+              50:  '#f0f7ff', 100: '#e0effe', 200: '#bae0fd',
+              300: '#7cc5fb', 400: '#38a5f6', 500: '#0e87e3',
+              600: '#0269c1', 700: '#03539c', 800: '#074680',
+              900: '#0c3b6a', 950: '#082549',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+</head>
+<body class="bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 min-h-screen flex items-center justify-center p-4">
+
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute -top-40 -right-40 w-96 h-96 bg-brand-400/10 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <div class="relative w-full max-w-md">
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <!-- Header -->
+      <div class="bg-gradient-to-br from-brand-700 to-brand-900 px-8 py-7 text-center">
+        <div class="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center mx-auto mb-3">
+          <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+          </svg>
+        </div>
+        <h1 class="text-white font-bold text-xl">Daftar Akun Baru</h1>
+        <p class="text-brand-200 text-xs mt-1">Akun akan diverifikasi oleh admin</p>
+      </div>
+
+      <!-- Form -->
+      <div class="px-8 py-7">
+
+        {{if .success}}
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm mb-5 flex items-start gap-2">
+          <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          <div>
+            <p class="font-semibold">Pendaftaran Berhasil!</p>
+            <p class="mt-0.5">{{.success}}</p>
+          </div>
+        </div>
+        <div class="text-center mt-2">
+          <a href="/login" class="text-brand-600 font-semibold hover:text-brand-800 text-sm">← Kembali ke halaman masuk</a>
+        </div>
+        {{else}}
+
+        {{if .errors}}
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-5">
+          <p class="font-semibold mb-1">Terdapat kesalahan:</p>
+          <ul class="list-disc list-inside space-y-0.5">
+            {{range .errors}}<li>{{.}}</li>{{end}}
+          </ul>
+        </div>
+        {{end}}
+
+        <form action="/register" method="POST" class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Lengkap</label>
+            <input
+              type="text" name="full_name"
+              value="{{if .form}}{{.form.full_name}}{{end}}"
+              placeholder="Nama lengkap Anda"
+              class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-slate-50 focus:bg-white transition"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Username</label>
+            <input
+              type="text" name="username"
+              value="{{if .form}}{{.form.username}}{{end}}"
+              placeholder="Username unik (min. 3 karakter)"
+              class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-slate-50 focus:bg-white transition"
+              required minlength="3"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Email</label>
+            <input
+              type="email" name="email"
+              value="{{if .form}}{{.form.email}}{{end}}"
+              placeholder="email@contoh.com"
+              class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-slate-50 focus:bg-white transition"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
+            <input
+              type="password" name="password"
+              placeholder="Min. 6 karakter"
+              class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-slate-50 focus:bg-white transition"
+              required minlength="6"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Konfirmasi Password</label>
+            <input
+              type="password" name="confirm_password"
+              placeholder="Ulangi password"
+              class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-slate-50 focus:bg-white transition"
+              required
+            />
+          </div>
+
+          <div class="bg-amber-50 border border-amber-200 text-amber-700 px-3 py-2.5 rounded-lg text-xs flex gap-2 items-start">
+            <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+            Akun Anda memerlukan persetujuan admin sebelum dapat digunakan.
+          </div>
+
+          <button
+            type="submit"
+            class="w-full bg-brand-700 hover:bg-brand-800 text-white font-semibold py-2.5 rounded-lg transition-all text-sm shadow-sm hover:shadow-md active:scale-[0.99]"
+          >
+            Daftar Sekarang
+          </button>
+        </form>
+
+        <p class="text-center text-sm text-slate-500 mt-5">
+          Sudah punya akun?
+          <a href="/login" class="text-brand-600 font-semibold hover:text-brand-800 transition">Masuk di sini</a>
+        </p>
+        {{end}}
+      </div>
+    </div>
+    <p class="text-center text-brand-200/60 text-xs mt-5">&copy; 2025 KantorKu. All rights reserved.</p>
+  </div>
+</body>
+</html>
