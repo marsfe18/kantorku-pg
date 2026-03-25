@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{.title}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            brand: { 50:'#f0f7ff',100:'#e0effe',200:'#bae0fd',300:'#7cc5fb',400:'#38a5f6',500:'#0e87e3',600:'#0269c1',700:'#03539c',800:'#074680',900:'#0c3b6a',950:'#082549' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .sidebar-link { display:flex; align-items:center; gap:0.75rem; padding:0.625rem 1rem; border-radius:0.5rem; font-size:0.875rem; font-weight:500; transition:all 0.15s; color:#bae0fd; }
+    .sidebar-link:hover { background:#074680; color:white; }
+    .sidebar-link.active { background:white; color:#03539c; font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+    #sidebar { transition: transform 0.25s ease; }
+    #sidebar.hidden-sidebar { transform: translateX(-100%); }
+    #main-content { transition: margin-left 0.25s ease; }
+    #sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:29; }
+    #sidebar-overlay.show { display:block; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-brand-800 flex flex-col z-30">
+  <div class="flex items-center gap-3 px-6 py-5 border-b border-brand-700">
+    <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
+      <svg class="w-5 h-5 text-brand-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+      </svg>
+    </div>
+    <div>
+      <div class="text-white font-bold text-base leading-tight">KantorKu</div>
+      <div class="text-brand-300 text-xs">Pengelolaan Barang</div>
+    </div>
+  </div>
+  <div class="px-4 py-4 border-b border-brand-700">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+        {{if .user}}{{slice .user.FullName 0 1}}{{end}}
+      </div>
+      <div class="min-w-0">
+        <div class="text-white text-sm font-semibold truncate">{{if .user}}{{.user.FullName}}{{end}}</div>
+        <div class="flex gap-1 mt-0.5 flex-wrap">
+          {{if .claims}}{{range .claims.Roles}}
+          <span class="text-xs bg-brand-600/60 text-brand-200 px-1.5 py-0.5 rounded">{{roleLabel .}}</span>
+          {{end}}{{end}}
+        </div>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+    <p class="text-brand-400 text-xs font-semibold uppercase tracking-wider px-4 mb-2">Menu Supervisor</p>
+    <a href="/supervisor/dashboard" class="sidebar-link active">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </a>
+    <a href="/supervisor/items" class="sidebar-link">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      Kelola Barang
+    </a>
+    <a href="/supervisor/requests" class="sidebar-link">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Permintaan Barang
+    </a>
+  </nav>
+  <div class="px-3 py-4 border-t border-brand-700">
+    <form action="/logout" method="POST">
+      <button type="submit" class="sidebar-link w-full text-left" style="color:#fca5a5" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background=''">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Keluar
+      </button>
+    </form>
+  </div>
+</aside>
+
+<main id="main-content" class="ml-64 min-h-screen">
+  <header class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-20 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button onclick="toggleSidebar()" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div>
+        <h1 class="font-bold text-slate-800 text-lg">Dashboard Supervisor</h1>
+        <p class="text-slate-400 text-xs mt-0.5">Selamat datang, {{if .user}}{{.user.FullName}}{{end}}</p>
+      </div>
+    </div>
+    <span class="text-xs text-slate-400" id="current-date"></span>
+  </header>
+
+  <div class="p-6">
+    <!-- Stat cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+        <p class="text-slate-500 text-xs font-medium uppercase tracking-wide">Barang Aktif</p>
+        <p class="text-3xl font-bold text-slate-800 mt-1">{{.activeCount}}</p>
+        <p class="text-slate-400 text-xs mt-1">Tersedia di gudang</p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+        <p class="text-slate-500 text-xs font-medium uppercase tracking-wide">Stok Menipis</p>
+        <p class="text-3xl font-bold {{if gt .lowStockCount 0}}text-amber-500{{else}}text-slate-800{{end}} mt-1">{{.lowStockCount}}</p>
+        <p class="text-slate-400 text-xs mt-1">Stok ≤ 5 unit</p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+        <p class="text-slate-500 text-xs font-medium uppercase tracking-wide">Barang Dihapus</p>
+        <p class="text-3xl font-bold text-slate-400 mt-1">{{.deletedCount}}</p>
+        <p class="text-slate-400 text-xs mt-1">Tidak aktif</p>
+      </div>
+    </div>
+
+    <!-- Low stock list -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <h2 class="font-semibold text-slate-800">Barang Stok Menipis</h2>
+          {{if gt .lowStockCount 0}}
+          <span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">{{.lowStockCount}} item</span>
+          {{end}}
+        </div>
+        <a href="/supervisor/items" class="text-brand-600 text-sm font-medium hover:text-brand-800 flex items-center gap-1">
+          Kelola barang
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      {{if .lowItems}}
+      <div class="divide-y divide-slate-100">
+        {{range .lowItems}}
+        <div class="px-6 py-4 flex items-center gap-4 hover:bg-slate-50 transition">
+          <div class="w-10 h-10 rounded-lg bg-slate-100 flex-shrink-0 overflow-hidden">
+            {{if .ImageURL}}
+            <img src="{{.ImageURL}}" class="w-full h-full object-cover" alt="{{.Title}}" />
+            {{else}}
+            <div class="w-full h-full flex items-center justify-center text-slate-300">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            {{end}}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-slate-800 text-sm truncate">{{.Title}}</p>
+            <p class="text-slate-400 text-xs">{{.Description}}</p>
+          </div>
+          <span class="text-sm font-bold {{if eq .Stock 0}}text-red-600 bg-red-50{{else}}text-amber-600 bg-amber-50{{end}} px-3 py-1 rounded-full">
+            {{.Stock}} unit
+          </span>
+        </div>
+        {{end}}
+      </div>
+      {{else}}
+      <div class="px-6 py-10 text-center">
+        <svg class="w-10 h-10 text-slate-200 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p class="text-slate-400 text-sm">Semua stok barang aman</p>
+      </div>
+      {{end}}
+    </div>
+  </div>
+</main>
+
+<script>
+  document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  let sidebarOpen = window.innerWidth >= 768;
+  function toggleSidebar() { sidebarOpen = !sidebarOpen; applySidebar(); }
+  function applySidebar() {
+    const s = document.getElementById('sidebar'), m = document.getElementById('main-content'), o = document.getElementById('sidebar-overlay');
+    const mobile = window.innerWidth < 768;
+    if (sidebarOpen) { s.classList.remove('hidden-sidebar'); o.classList.toggle('show', mobile); m.style.marginLeft = mobile ? '0' : '16rem'; }
+    else { s.classList.add('hidden-sidebar'); o.classList.remove('show'); m.style.marginLeft = '0'; }
+  }
+  window.addEventListener('resize', () => { sidebarOpen = window.innerWidth >= 768; applySidebar(); });
+  applySidebar();
+</script>
+</body>
+</html>

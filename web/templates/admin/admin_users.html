@@ -32,12 +32,18 @@
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:50; align-items:center; justify-content:center; }
     .modal-overlay.open { display:flex; }
     .chip { display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; padding:2px 8px; border-radius:9999px; font-weight:500; }
+    #sidebar { transition: transform 0.25s ease; }
+    #sidebar.hidden-sidebar { transform: translateX(-100%); }
+    #main-content { transition: margin-left 0.25s ease; }
+    #sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:29; }
+    #sidebar-overlay.show { display:block; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased">
 
 <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
-<aside class="fixed inset-y-0 left-0 w-64 bg-brand-800 flex flex-col z-30">
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-brand-800 flex flex-col z-30">
   <div class="flex items-center gap-3 px-6 py-5 border-b border-brand-700">
     <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
       <svg class="w-5 h-5 text-brand-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -92,11 +98,18 @@
 </aside>
 
 <!-- ═══════════════════ MAIN ═══════════════════ -->
-<main class="ml-64 min-h-screen">
+<main id="main-content" class="ml-64 min-h-screen">
   <header class="bg-white border-b border-slate-200 px-8 py-4 sticky top-0 z-20 flex items-center justify-between">
-    <div>
-      <h1 class="font-bold text-slate-800 text-lg">Kelola Pengguna</h1>
-      <p class="text-slate-400 text-xs mt-0.5">Manajemen akun, role, tim, dan persetujuan</p>
+    <div class="flex items-center gap-3">
+      <button onclick="toggleSidebar()" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition" title="Toggle sidebar">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <div>
+        <h1 class="font-bold text-slate-800 text-lg">Kelola Pengguna</h1>
+        <p class="text-slate-400 text-xs mt-0.5">Manajemen akun, role, tim, dan persetujuan</p>
+      </div>
     </div>
     <button onclick="openModal('modal-create')"
       class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
@@ -391,6 +404,38 @@
 </div>
 
 <script>
+// ── Sidebar toggle ──────────────────────────────────────────────
+let sidebarOpen = window.innerWidth >= 768;
+
+function toggleSidebar() {
+  sidebarOpen = !sidebarOpen;
+  applySidebar();
+}
+
+function applySidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main-content');
+  const overlay = document.getElementById('sidebar-overlay');
+  const isMobile = window.innerWidth < 768;
+
+  if (sidebarOpen) {
+    sidebar.classList.remove('hidden-sidebar');
+    overlay.classList.toggle('show', isMobile);
+    main.style.marginLeft = isMobile ? '0' : '16rem';
+  } else {
+    sidebar.classList.add('hidden-sidebar');
+    overlay.classList.remove('show');
+    main.style.marginLeft = '0';
+  }
+}
+
+window.addEventListener('resize', () => {
+  sidebarOpen = window.innerWidth >= 768;
+  applySidebar();
+});
+
+applySidebar();
+
 // ── Helpers ──────────────────────────────────────────────────────
 let activeFilter = 'all';
 

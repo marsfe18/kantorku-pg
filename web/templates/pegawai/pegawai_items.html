@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{.title}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Plus Jakarta Sans','sans-serif']},colors:{brand:{50:'#f0f7ff',100:'#e0effe',200:'#bae0fd',300:'#7cc5fb',400:'#38a5f6',500:'#0e87e3',600:'#0269c1',700:'#03539c',800:'#074680',900:'#0c3b6a',950:'#082549'}}}}}</script>
+  <style>
+    body{font-family:'Plus Jakarta Sans',sans-serif;}
+    .sl{display:flex;align-items:center;gap:.75rem;padding:.625rem 1rem;border-radius:.5rem;font-size:.875rem;font-weight:500;transition:all .15s;color:#bae0fd;}
+    .sl:hover{background:#074680;color:white;}
+    .sl.active{background:white;color:#03539c;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1);}
+    #sb{transition:transform .25s ease;}
+    #sb.hide{transform:translateX(-100%);}
+    #mc{transition:margin-left .25s ease;}
+    #ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:29;}
+    #ov.show{display:block;}
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;align-items:center;justify-content:center;padding:1rem;}
+    .modal-overlay.open{display:flex;}
+  </style>
+</head>
+<body class="bg-slate-50 antialiased">
+<div id="ov" onclick="tog()"></div>
+
+<!-- SIDEBAR -->
+<aside id="sb" class="fixed inset-y-0 left-0 w-64 bg-brand-800 flex flex-col z-30">
+  <div class="flex items-center gap-3 px-6 py-5 border-b border-brand-700">
+    <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
+      <svg class="w-5 h-5 text-brand-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+    </div>
+    <div><div class="text-white font-bold text-base">KantorKu</div><div class="text-brand-300 text-xs">Pengelolaan Barang</div></div>
+  </div>
+  <div class="px-4 py-4 border-b border-brand-700">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-sm">{{if .user}}{{slice .user.FullName 0 1}}{{end}}</div>
+      <div class="min-w-0">
+        <div class="text-white text-sm font-semibold truncate">{{if .user}}{{.user.FullName}}{{end}}</div>
+        <div class="flex gap-1 mt-0.5 flex-wrap">{{if .claims}}{{range .claims.Roles}}<span class="text-xs bg-brand-600/60 text-brand-200 px-1.5 py-0.5 rounded">{{roleLabel .}}</span>{{end}}{{end}}</div>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+    <p class="text-brand-400 text-xs font-semibold uppercase tracking-wider px-4 mb-2">Menu</p>
+    <a href="/pegawai/dashboard" class="sl"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
+    <a href="/pegawai/items" class="sl active"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Minta Barang</a>
+    <a href="/pegawai/requests" class="sl"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Riwayat Permintaan</a>
+  </nav>
+  <div class="px-3 py-4 border-t border-brand-700">
+    <form action="/logout" method="POST">
+      <button class="sl w-full text-left" style="color:#fca5a5" onmouseover="this.style.background='rgba(239,68,68,.15)'" onmouseout="this.style.background=''">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Keluar
+      </button>
+    </form>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main id="mc" class="ml-64 min-h-screen">
+  <header class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-20 flex items-center gap-3">
+    <button onclick="tog()" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div>
+      <h1 class="font-bold text-slate-800 text-lg">Minta Barang</h1>
+      <p class="text-slate-400 text-xs">Pilih barang yang ingin diminta</p>
+    </div>
+  </header>
+
+  <div class="p-6">
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed top-6 right-6 z-50 bg-white border rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 text-sm font-medium min-w-64"></div>
+
+    <!-- Search -->
+    <div class="relative mb-5 max-w-sm">
+      <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" id="search" placeholder="Cari nama barang..."
+        oninput="doSearch(this.value)"
+        class="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" />
+    </div>
+
+    <!-- Items grid -->
+    <div id="items-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      {{range .items}}
+      <div class="item-card bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition" data-title="{{.Title}}">
+        <!-- Image -->
+        <div class="h-40 bg-slate-100 relative">
+          {{if .ImageURL}}
+          <img src="{{.ImageURL}}" alt="{{.Title}}" class="w-full h-full object-cover" />
+          {{else}}
+          <div class="w-full h-full flex items-center justify-center text-slate-200">
+            <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          {{end}}
+          {{if le .Stock 5}}
+          <span class="absolute top-2 right-2 text-xs {{if eq .Stock 0}}bg-red-600{{else}}bg-amber-500{{end}} text-white px-2 py-0.5 rounded-full font-medium">
+            {{if eq .Stock 0}}Habis{{else}}Menipis{{end}}
+          </span>
+          {{end}}
+        </div>
+        <!-- Info -->
+        <div class="p-4">
+          <h3 class="font-semibold text-slate-800 text-sm truncate">{{.Title}}</h3>
+          <p class="text-slate-400 text-xs mt-1 line-clamp-2 min-h-8">{{if .Description}}{{.Description}}{{else}}<em>Tidak ada deskripsi</em>{{end}}</p>
+          <div class="flex items-center justify-between mt-3">
+            <span class="text-sm font-bold {{if eq .Stock 0}}text-red-600{{else if le .Stock 5}}text-amber-600{{else}}text-slate-700{{end}}">
+              Stok: {{.Stock}} unit
+            </span>
+          </div>
+          {{if gt .Stock 0}}
+          <button onclick="openRequest('{{.ID}}','{{.Title}}',{{.Stock}})"
+            class="mt-3 w-full bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold py-2 rounded-lg transition">
+            Minta Barang Ini
+          </button>
+          {{else}}
+          <button disabled class="mt-3 w-full bg-slate-100 text-slate-400 text-sm font-semibold py-2 rounded-lg cursor-not-allowed">
+            Stok Habis
+          </button>
+          {{end}}
+        </div>
+      </div>
+      {{else}}
+      <div class="col-span-4 py-16 text-center text-slate-400">
+        <svg class="w-12 h-12 mx-auto mb-3 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <p class="font-medium">Tidak ada barang tersedia</p>
+      </div>
+      {{end}}
+    </div>
+  </div>
+</main>
+
+<!-- MODAL: FORM REQUEST -->
+<div id="modal-req" class="modal-overlay" onclick="if(event.target.id==='modal-req')closeReq()">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+    <div class="bg-gradient-to-r from-brand-700 to-brand-900 px-6 py-5 flex items-center justify-between">
+      <div>
+        <h2 class="text-white font-bold text-base">Form Permintaan</h2>
+        <p id="req-item-name" class="text-brand-200 text-xs mt-0.5 truncate max-w-48"></p>
+      </div>
+      <button onclick="closeReq()" class="text-brand-200 hover:text-white">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <input id="req-item-id" type="hidden"/>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">
+          Jumlah <span id="req-max-hint" class="font-normal text-slate-400"></span>
+        </label>
+        <div class="flex items-center gap-3">
+          <button type="button" onclick="adj(-1)" class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-lg font-bold transition">−</button>
+          <input id="req-qty" type="number" min="1" value="1"
+            class="flex-1 text-center px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 font-semibold text-lg" />
+          <button type="button" onclick="adj(1)" class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-lg font-bold transition">+</button>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan <span class="font-normal text-slate-400">(opsional)</span></label>
+        <textarea id="req-notes" rows="2" placeholder="Keperluan atau keterangan lain..."
+          class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 focus:bg-white resize-none"></textarea>
+      </div>
+      <div id="req-error" class="hidden text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2"></div>
+    </div>
+    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+      <button onclick="closeReq()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">Batal</button>
+      <button id="req-submit" onclick="submitRequest()" class="px-5 py-2 text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition">Ajukan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Sidebar
+  let open = window.innerWidth >= 768;
+  function tog() { open = !open; apply(); }
+  function apply() {
+    const s=document.getElementById('sb'),m=document.getElementById('mc'),o=document.getElementById('ov'),mob=window.innerWidth<768;
+    if(open){s.classList.remove('hide');o.classList.toggle('show',mob);m.style.marginLeft=mob?'0':'16rem';}
+    else{s.classList.add('hide');o.classList.remove('show');m.style.marginLeft='0';}
+  }
+  window.addEventListener('resize',()=>{open=window.innerWidth>=768;apply();});
+  apply();
+
+  // Toast
+  function showToast(msg, ok=true) {
+    const t = document.getElementById('toast');
+    t.className = `fixed top-6 right-6 z-50 bg-white border rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 text-sm font-medium min-w-64 ${ok?'border-green-300 text-green-700':'border-red-300 text-red-600'}`;
+    t.innerHTML = `<span>${ok?'✅':'❌'}</span><span>${msg}</span>`;
+    t.classList.remove('hidden');
+    setTimeout(()=>t.classList.add('hidden'), 3000);
+  }
+
+  // Search
+  function doSearch(val) {
+    document.querySelectorAll('.item-card').forEach(c => {
+      c.style.display = !val || c.dataset.title.toLowerCase().includes(val.toLowerCase()) ? '' : 'none';
+    });
+  }
+
+  // Request modal
+  let maxStock = 0;
+  function openRequest(id, name, stock) {
+    maxStock = stock;
+    document.getElementById('req-item-id').value = id;
+    document.getElementById('req-item-name').textContent = name;
+    document.getElementById('req-max-hint').textContent = `(maks. ${stock} unit)`;
+    document.getElementById('req-qty').value = 1;
+    document.getElementById('req-qty').max = stock;
+    document.getElementById('req-notes').value = '';
+    document.getElementById('req-error').classList.add('hidden');
+    document.getElementById('modal-req').classList.add('open');
+  }
+  function closeReq() { document.getElementById('modal-req').classList.remove('open'); }
+  function adj(d) {
+    const input = document.getElementById('req-qty');
+    const val = Math.max(1, Math.min(maxStock, parseInt(input.value||1) + d));
+    input.value = val;
+  }
+
+  async function submitRequest() {
+    const itemID = document.getElementById('req-item-id').value;
+    const qty = parseInt(document.getElementById('req-qty').value);
+    const notes = document.getElementById('req-notes').value.trim();
+    const errEl = document.getElementById('req-error');
+    const btn = document.getElementById('req-submit');
+
+    if (qty <= 0 || qty > maxStock) {
+      errEl.textContent = `Jumlah harus antara 1–${maxStock}`;
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Mengajukan...';
+    const fd = new FormData();
+    fd.append('item_id', itemID);
+    fd.append('quantity', qty);
+    fd.append('notes', notes);
+
+    try {
+      const res = await fetch('/pegawai/requests', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (res.ok) {
+        closeReq();
+        showToast(data.message);
+      } else {
+        errEl.textContent = data.error || 'Terjadi kesalahan';
+        errEl.classList.remove('hidden');
+      }
+    } finally {
+      btn.disabled = false; btn.textContent = 'Ajukan';
+    }
+  }
+</script>
+</body>
+</html>

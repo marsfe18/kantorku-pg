@@ -78,7 +78,25 @@ func main() {
 		},
 	})
 
-	r.LoadHTMLGlob("web/templates/**/*.html")
+	r.LoadHTMLFiles(
+		// auth
+		"web/templates/auth/login.html",
+		"web/templates/auth/register.html",
+		// admin
+		"web/templates/admin/admin_dashboard.html",
+		"web/templates/admin/admin_users.html",
+		// supervisor
+		"web/templates/supervisor/supervisor_dashboard.html",
+		"web/templates/supervisor/supervisor_items.html",
+		"web/templates/supervisor/supervisor_requests.html",
+		// pegawai
+		"web/templates/pegawai/pegawai_dashboard.html",
+		"web/templates/pegawai/pegawai_items.html",
+		"web/templates/pegawai/pegawai_requests.html",
+		// misc
+		"web/templates/error.html",
+		"web/templates/coming_soon.html",
+	)
 	r.Static("/static", "./web/static")
 
 	// Public
@@ -107,17 +125,24 @@ func main() {
 	// Supervisor
 	supervisor := r.Group("/supervisor", middleware.AuthRequired(), middleware.RequireRole(models.RoleSupervisor))
 	{
-		supervisor.GET("/dashboard", func(c *gin.Context) {
-			c.HTML(200, "coming_soon.html", gin.H{"title": "Supervisor Dashboard"})
-		})
+		supervisor.GET("/dashboard", handlers.SupervisorDashboard)
+		supervisor.GET("/items", handlers.SupervisorItems)
+		supervisor.POST("/items", handlers.SupervisorCreateItem)
+		supervisor.GET("/items/:id", handlers.SupervisorGetItem)
+		supervisor.POST("/items/:id/update", handlers.SupervisorUpdateItem)
+		supervisor.POST("/items/:id/delete", handlers.SupervisorDeleteItem)
+		supervisor.GET("/requests", handlers.SupervisorRequests)
+		supervisor.POST("/requests/:id/approve", handlers.SupervisorApproveRequest)
+		supervisor.POST("/requests/:id/reject", handlers.SupervisorRejectRequest)
 	}
 
 	// Pegawai
 	pegawai := r.Group("/pegawai", middleware.AuthRequired())
 	{
-		pegawai.GET("/dashboard", func(c *gin.Context) {
-			c.HTML(200, "coming_soon.html", gin.H{"title": "Pegawai Dashboard"})
-		})
+		pegawai.GET("/dashboard", handlers.PegawaiDashboard)
+		pegawai.GET("/items", handlers.PegawaiItems)
+		pegawai.POST("/requests", handlers.PegawaiCreateRequest)
+		pegawai.GET("/requests", handlers.PegawaiRequests)
 	}
 
 	port := os.Getenv("PORT")

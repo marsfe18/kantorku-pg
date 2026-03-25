@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{.title}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            brand: { 50:'#f0f7ff',100:'#e0effe',200:'#bae0fd',300:'#7cc5fb',400:'#38a5f6',500:'#0e87e3',600:'#0269c1',700:'#03539c',800:'#074680',900:'#0c3b6a',950:'#082549' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .sidebar-link { display:flex; align-items:center; gap:0.75rem; padding:0.625rem 1rem; border-radius:0.5rem; font-size:0.875rem; font-weight:500; transition:all 0.15s; color:#bae0fd; }
+    .sidebar-link:hover { background:#074680; color:white; }
+    .sidebar-link.active { background:white; color:#03539c; font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+    #sidebar { transition: transform 0.25s ease; }
+    #sidebar.hidden-sidebar { transform: translateX(-100%); }
+    #main-content { transition: margin-left 0.25s ease; }
+    #sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:29; }
+    #sidebar-overlay.show { display:block; }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:50; align-items:center; justify-content:center; padding:1rem; }
+    .modal-overlay.open { display:flex; }
+    .img-preview { width:100%; height:160px; object-fit:cover; border-radius:0.5rem; display:none; }
+    .img-preview.show { display:block; }
+    .img-placeholder { width:100%; height:160px; border-radius:0.5rem; background:#f1f5f9; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; cursor:pointer; border:2px dashed #cbd5e1; transition:border-color 0.15s; }
+    .img-placeholder:hover { border-color:#0269c1; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-brand-800 flex flex-col z-30">
+  <div class="flex items-center gap-3 px-6 py-5 border-b border-brand-700">
+    <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
+      <svg class="w-5 h-5 text-brand-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+    </div>
+    <div>
+      <div class="text-white font-bold text-base leading-tight">KantorKu</div>
+      <div class="text-brand-300 text-xs">Pengelolaan Barang</div>
+    </div>
+  </div>
+  <div class="px-4 py-4 border-b border-brand-700">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+        {{if .user}}{{slice .user.FullName 0 1}}{{end}}
+      </div>
+      <div class="min-w-0">
+        <div class="text-white text-sm font-semibold truncate">{{if .user}}{{.user.FullName}}{{end}}</div>
+        <div class="flex gap-1 mt-0.5 flex-wrap">
+          {{if .claims}}{{range .claims.Roles}}
+          <span class="text-xs bg-brand-600/60 text-brand-200 px-1.5 py-0.5 rounded">{{roleLabel .}}</span>
+          {{end}}{{end}}
+        </div>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+    <p class="text-brand-400 text-xs font-semibold uppercase tracking-wider px-4 mb-2">Menu Supervisor</p>
+    <a href="/supervisor/dashboard" class="sidebar-link">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </a>
+    <a href="/supervisor/items" class="sidebar-link active">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      Kelola Barang
+    </a>
+  </nav>
+  <div class="px-3 py-4 border-t border-brand-700">
+    <form action="/logout" method="POST">
+      <button type="submit" class="sidebar-link w-full text-left" style="color:#fca5a5" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background=''">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Keluar
+      </button>
+    </form>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<main id="main-content" class="ml-64 min-h-screen">
+  <header class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-20 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button onclick="toggleSidebar()" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div>
+        <h1 class="font-bold text-slate-800 text-lg">Kelola Barang</h1>
+        <p class="text-slate-400 text-xs mt-0.5">Tambah, edit, dan kelola stok barang kantor</p>
+      </div>
+    </div>
+    <button onclick="openCreate()" class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+      Tambah Barang
+    </button>
+  </header>
+
+  <div class="p-6">
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed top-6 right-6 z-50 bg-white border rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 text-sm font-medium min-w-64"></div>
+
+    <!-- Filter + Search -->
+    <div class="flex flex-wrap gap-2 mb-5">
+      <button onclick="filterItems('all', this)" class="filter-btn text-sm font-semibold px-4 py-2 rounded-lg bg-brand-600 text-white">Semua</button>
+      <button onclick="filterItems('active', this)" class="filter-btn text-sm font-medium px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Aktif</button>
+      <button onclick="filterItems('deleted', this)" class="filter-btn text-sm font-medium px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Dihapus</button>
+      <button onclick="filterItems('low', this)" class="filter-btn text-sm font-medium px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Stok Menipis</button>
+      <div class="flex-1 min-w-48 relative">
+        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" id="search-input" placeholder="Cari nama barang..."
+          oninput="applyFilters()"
+          class="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 focus:bg-white" />
+      </div>
+    </div>
+
+    <!-- Items Grid -->
+    <div id="items-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      {{range .items}}
+      <div class="item-card bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition hover:shadow-md"
+           id="card-{{.ID}}"
+           data-deleted="{{if .IsDeleted}}true{{else}}false{{end}}"
+           data-stock="{{.Stock}}"
+           data-title="{{.Title}}">
+
+        <!-- Gambar -->
+        <div class="relative h-40 bg-slate-100">
+          {{if .ImageURL}}
+          <img src="{{.ImageURL}}" alt="{{.Title}}" class="w-full h-full object-cover" />
+          {{else}}
+          <div class="w-full h-full flex items-center justify-center text-slate-300">
+            <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          {{end}}
+          <!-- Status badge -->
+          {{if .IsDeleted}}
+          <span class="absolute top-2 left-2 text-xs bg-slate-800/70 text-white px-2 py-0.5 rounded-full">Dihapus</span>
+          {{else if le .Stock 0}}
+          <span class="absolute top-2 left-2 text-xs bg-red-600/90 text-white px-2 py-0.5 rounded-full">Habis</span>
+          {{else if le .Stock 5}}
+          <span class="absolute top-2 left-2 text-xs bg-amber-500/90 text-white px-2 py-0.5 rounded-full">Menipis</span>
+          {{end}}
+        </div>
+
+        <!-- Info -->
+        <div class="p-4">
+          <h3 class="font-semibold text-slate-800 text-sm leading-tight truncate">{{.Title}}</h3>
+          <p class="text-slate-400 text-xs mt-1 line-clamp-2 min-h-8">{{if .Description}}{{.Description}}{{else}}<em>Tidak ada deskripsi</em>{{end}}</p>
+
+          <div class="flex items-center justify-between mt-3">
+            <div class="flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+              <span class="text-sm font-bold {{if .IsDeleted}}text-slate-400{{else if le .Stock 0}}text-red-600{{else if le .Stock 5}}text-amber-600{{else}}text-slate-700{{end}}">{{.Stock}} unit</span>
+            </div>
+            <span class="text-slate-400 text-xs">{{formatDate .UpdatedAt}}</span>
+          </div>
+
+          <!-- Actions -->
+          {{if not .IsDeleted}}
+          <div class="flex gap-2 mt-3 pt-3 border-t border-slate-100">
+            <button onclick="openEdit('{{.ID}}')"
+              class="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-50 py-1.5 rounded-lg transition">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              Edit
+            </button>
+            <div class="w-px bg-slate-100"></div>
+            <button onclick="deleteItem('{{.ID}}','{{.Title}}')"
+              class="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 py-1.5 rounded-lg transition">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              Hapus
+            </button>
+          </div>
+          {{else}}
+          <div class="mt-3 pt-3 border-t border-slate-100 text-center text-xs text-slate-400 italic">Barang ini sudah dihapus</div>
+          {{end}}
+        </div>
+      </div>
+      {{else}}
+      <div class="col-span-4 py-16 text-center text-slate-400">
+        <svg class="w-12 h-12 mx-auto mb-3 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <p class="font-medium">Belum ada barang</p>
+        <p class="text-sm mt-1">Klik "Tambah Barang" untuk memulai</p>
+      </div>
+      {{end}}
+    </div>
+  </div>
+</main>
+
+<!-- ═══ MODAL: TAMBAH BARANG ═══ -->
+<div id="modal-create" class="modal-overlay" onclick="closeOutside(event,'modal-create')">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
+    <div class="bg-gradient-to-r from-brand-700 to-brand-900 px-6 py-5 flex items-center justify-between sticky top-0">
+      <div>
+        <h2 class="text-white font-bold text-base">Tambah Barang Baru</h2>
+        <p class="text-brand-200 text-xs mt-0.5">Isi detail barang kantor</p>
+      </div>
+      <button onclick="closeModal('modal-create')" class="text-brand-200 hover:text-white">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <!-- Image upload -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-2">Foto Barang</label>
+        <div id="c-img-placeholder" class="img-placeholder" onclick="document.getElementById('c-image').click()">
+          <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span class="text-xs text-slate-400">Klik untuk upload foto</span>
+          <span class="text-xs text-slate-300">JPG, PNG, WebP — maks. 2MB</span>
+        </div>
+        <img id="c-img-preview" class="img-preview" alt="Preview" />
+        <input id="c-image" type="file" accept="image/*" class="hidden" onchange="previewImage(this,'c-img-preview','c-img-placeholder')" />
+        <button id="c-img-remove" class="hidden mt-1 text-xs text-red-500 hover:underline" onclick="removeImage('c-image','c-img-preview','c-img-placeholder','c-img-remove')">Hapus foto</button>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Barang *</label>
+        <input id="c-title" type="text" placeholder="Contoh: Kertas HVS A4" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 focus:bg-white" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Deskripsi</label>
+        <textarea id="c-desc" rows="2" placeholder="Deskripsi singkat (opsional)" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 focus:bg-white resize-none"></textarea>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Stok Awal *</label>
+        <input id="c-stock" type="number" min="0" value="0" placeholder="0" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 focus:bg-white" />
+      </div>
+      <div id="c-error" class="hidden text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2"></div>
+    </div>
+    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0">
+      <button onclick="closeModal('modal-create')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">Batal</button>
+      <button id="c-submit" onclick="submitCreate()" class="px-5 py-2 text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition">Simpan Barang</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: EDIT BARANG ═══ -->
+<div id="modal-edit" class="modal-overlay" onclick="closeOutside(event,'modal-edit')">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
+    <div class="bg-gradient-to-r from-slate-700 to-slate-900 px-6 py-5 flex items-center justify-between sticky top-0">
+      <div>
+        <h2 class="text-white font-bold text-base">Edit Barang</h2>
+        <p id="e-subtitle" class="text-slate-300 text-xs mt-0.5"></p>
+      </div>
+      <button onclick="closeModal('modal-edit')" class="text-slate-300 hover:text-white">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <input id="e-id" type="hidden" />
+
+      <!-- Image upload -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-2">Foto Barang <span class="font-normal text-slate-400">(kosongkan jika tidak ingin mengubah)</span></label>
+        <div id="e-img-placeholder" class="img-placeholder" onclick="document.getElementById('e-image').click()">
+          <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span class="text-xs text-slate-400">Klik untuk ganti foto</span>
+        </div>
+        <img id="e-img-preview" class="img-preview" alt="Preview" />
+        <input id="e-image" type="file" accept="image/*" class="hidden" onchange="previewImage(this,'e-img-preview','e-img-placeholder')" />
+        <button id="e-img-remove" class="hidden mt-1 text-xs text-red-500 hover:underline" onclick="removeImage('e-image','e-img-preview','e-img-placeholder','e-img-remove')">Hapus foto baru</button>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Barang *</label>
+        <input id="e-title" type="text" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 focus:bg-white" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Deskripsi</label>
+        <textarea id="e-desc" rows="2" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 focus:bg-white resize-none"></textarea>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Stok</label>
+        <input id="e-stock" type="number" min="0" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 focus:bg-white" />
+      </div>
+      <div id="e-error" class="hidden text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2"></div>
+    </div>
+    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0">
+      <button onclick="closeModal('modal-edit')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">Batal</button>
+      <button onclick="submitEdit()" class="px-5 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-800 text-white rounded-lg transition">Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Sidebar ──────────────────────────────────────────────────────
+let sidebarOpen = window.innerWidth >= 768;
+function toggleSidebar() { sidebarOpen = !sidebarOpen; applySidebar(); }
+function applySidebar() {
+  const s = document.getElementById('sidebar'), m = document.getElementById('main-content'), o = document.getElementById('sidebar-overlay');
+  const mobile = window.innerWidth < 768;
+  if (sidebarOpen) { s.classList.remove('hidden-sidebar'); o.classList.toggle('show', mobile); m.style.marginLeft = mobile ? '0' : '16rem'; }
+  else { s.classList.add('hidden-sidebar'); o.classList.remove('show'); m.style.marginLeft = '0'; }
+}
+window.addEventListener('resize', () => { sidebarOpen = window.innerWidth >= 768; applySidebar(); });
+applySidebar();
+
+// ── Modal ────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeOutside(e, id) { if (e.target.id === id) closeModal(id); }
+
+// ── Toast ────────────────────────────────────────────────────────
+function showToast(msg, ok = true) {
+  const t = document.getElementById('toast');
+  t.className = `fixed top-6 right-6 z-50 bg-white border rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 text-sm font-medium min-w-64 ${ok ? 'border-green-300 text-green-700' : 'border-red-300 text-red-600'}`;
+  t.innerHTML = `<span>${ok ? '✅' : '❌'}</span><span>${msg}</span>`;
+  t.classList.remove('hidden');
+  setTimeout(() => t.classList.add('hidden'), 3000);
+}
+
+// ── Image preview ────────────────────────────────────────────────
+function previewImage(input, previewId, placeholderId) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById(previewId);
+    const placeholder = document.getElementById(placeholderId);
+    preview.src = e.target.result;
+    preview.classList.add('show');
+    placeholder.style.display = 'none';
+    const removeBtn = input.id === 'c-image' ? 'c-img-remove' : 'e-img-remove';
+    document.getElementById(removeBtn).classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage(inputId, previewId, placeholderId, removeBtnId) {
+  document.getElementById(inputId).value = '';
+  const preview = document.getElementById(previewId);
+  preview.src = '';
+  preview.classList.remove('show');
+  document.getElementById(placeholderId).style.display = '';
+  document.getElementById(removeBtnId).classList.add('hidden');
+}
+
+// ── Filter ───────────────────────────────────────────────────────
+let activeFilter = 'all';
+function filterItems(filter, btn) {
+  activeFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.remove('bg-brand-600', 'text-white');
+    b.classList.add('bg-white', 'border', 'border-slate-200', 'text-slate-600');
+  });
+  btn.classList.add('bg-brand-600', 'text-white');
+  btn.classList.remove('bg-white', 'border', 'border-slate-200', 'text-slate-600');
+  applyFilters();
+}
+
+function applyFilters() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  document.querySelectorAll('.item-card').forEach(card => {
+    const deleted = card.dataset.deleted === 'true';
+    const stock = parseInt(card.dataset.stock);
+    const title = card.dataset.title.toLowerCase();
+    const matchSearch = !search || title.includes(search);
+    let matchFilter = true;
+    if (activeFilter === 'active') matchFilter = !deleted;
+    else if (activeFilter === 'deleted') matchFilter = deleted;
+    else if (activeFilter === 'low') matchFilter = !deleted && stock <= 5;
+    card.style.display = matchFilter && matchSearch ? '' : 'none';
+  });
+}
+
+// ── Create ───────────────────────────────────────────────────────
+function openCreate() {
+  document.getElementById('c-title').value = '';
+  document.getElementById('c-desc').value = '';
+  document.getElementById('c-stock').value = '0';
+  document.getElementById('c-error').classList.add('hidden');
+  removeImage('c-image', 'c-img-preview', 'c-img-placeholder', 'c-img-remove');
+  openModal('modal-create');
+}
+
+async function submitCreate() {
+  const title = document.getElementById('c-title').value.trim();
+  const desc = document.getElementById('c-desc').value.trim();
+  const stock = document.getElementById('c-stock').value;
+  const imageFile = document.getElementById('c-image').files[0];
+  const errEl = document.getElementById('c-error');
+
+  if (!title) { errEl.textContent = 'Nama barang wajib diisi'; errEl.classList.remove('hidden'); return; }
+  if (parseInt(stock) < 0) { errEl.textContent = 'Stok tidak boleh negatif'; errEl.classList.remove('hidden'); return; }
+
+  const btn = document.getElementById('c-submit');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('description', desc);
+  fd.append('stock', stock);
+  if (imageFile) fd.append('image', imageFile);
+
+  try {
+    const res = await fetch('/supervisor/items', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (res.ok) {
+      closeModal('modal-create');
+      showToast(data.message);
+      setTimeout(() => location.reload(), 700);
+    } else {
+      errEl.textContent = data.error || 'Terjadi kesalahan';
+      errEl.classList.remove('hidden');
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = 'Simpan Barang';
+  }
+}
+
+// ── Edit ─────────────────────────────────────────────────────────
+async function openEdit(id) {
+  try {
+    const res = await fetch(`/supervisor/items/${id}`);
+    const item = await res.json();
+    document.getElementById('e-id').value = item.id;
+    document.getElementById('e-subtitle').textContent = item.title;
+    document.getElementById('e-title').value = item.title;
+    document.getElementById('e-desc').value = item.description || '';
+    document.getElementById('e-stock').value = item.stock;
+    document.getElementById('e-error').classList.add('hidden');
+
+    // Reset image
+    removeImage('e-image', 'e-img-preview', 'e-img-placeholder', 'e-img-remove');
+
+    // Tampilkan gambar existing jika ada
+    if (item.image_url) {
+      const placeholder = document.getElementById('e-img-placeholder');
+      placeholder.style.display = 'none';
+      const preview = document.getElementById('e-img-preview');
+      preview.src = item.image_url;
+      preview.classList.add('show');
+    }
+
+    openModal('modal-edit');
+  } catch {
+    showToast('Gagal memuat data barang', false);
+  }
+}
+
+async function submitEdit() {
+  const id = document.getElementById('e-id').value;
+  const title = document.getElementById('e-title').value.trim();
+  const desc = document.getElementById('e-desc').value.trim();
+  const stock = document.getElementById('e-stock').value;
+  const imageFile = document.getElementById('e-image').files[0];
+  const errEl = document.getElementById('e-error');
+
+  if (!title) { errEl.textContent = 'Nama barang wajib diisi'; errEl.classList.remove('hidden'); return; }
+
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('description', desc);
+  fd.append('stock', stock);
+  if (imageFile) fd.append('image', imageFile);
+
+  const res = await fetch(`/supervisor/items/${id}/update`, { method: 'POST', body: fd });
+  const data = await res.json();
+  if (res.ok) {
+    closeModal('modal-edit');
+    showToast(data.message);
+    setTimeout(() => location.reload(), 700);
+  } else {
+    errEl.textContent = data.error || 'Terjadi kesalahan';
+    errEl.classList.remove('hidden');
+  }
+}
+
+// ── Delete ───────────────────────────────────────────────────────
+async function deleteItem(id, name) {
+  if (!confirm(`Hapus barang "${name}"?\n\nBarang tidak akan terhapus permanen, hanya dinonaktifkan.`)) return;
+  const fd = new FormData();
+  const res = await fetch(`/supervisor/items/${id}/delete`, { method: 'POST', body: fd });
+  const data = await res.json();
+  if (res.ok) {
+    showToast(data.message);
+    setTimeout(() => location.reload(), 700);
+  } else {
+    showToast(data.error || 'Gagal', false);
+  }
+}
+</script>
+</body>
+</html>

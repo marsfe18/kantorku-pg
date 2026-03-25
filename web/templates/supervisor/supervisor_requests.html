@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{.title}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Plus Jakarta Sans','sans-serif']},colors:{brand:{50:'#f0f7ff',100:'#e0effe',200:'#bae0fd',300:'#7cc5fb',400:'#38a5f6',500:'#0e87e3',600:'#0269c1',700:'#03539c',800:'#074680',900:'#0c3b6a',950:'#082549'}}}}}</script>
+  <style>
+    body{font-family:'Plus Jakarta Sans',sans-serif;}
+    .sl{display:flex;align-items:center;gap:.75rem;padding:.625rem 1rem;border-radius:.5rem;font-size:.875rem;font-weight:500;transition:all .15s;color:#bae0fd;}
+    .sl:hover{background:#074680;color:white;}
+    .sl.active{background:white;color:#03539c;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1);}
+    #sb{transition:transform .25s ease;}
+    #sb.hide{transform:translateX(-100%);}
+    #mc{transition:margin-left .25s ease;}
+    #ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:29;}
+    #ov.show{display:block;}
+  </style>
+</head>
+<body class="bg-slate-50 antialiased">
+<div id="ov" onclick="tog()"></div>
+
+<!-- SIDEBAR -->
+<aside id="sb" class="fixed inset-y-0 left-0 w-64 bg-brand-800 flex flex-col z-30">
+  <div class="flex items-center gap-3 px-6 py-5 border-b border-brand-700">
+    <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
+      <svg class="w-5 h-5 text-brand-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+    </div>
+    <div><div class="text-white font-bold text-base">KantorKu</div><div class="text-brand-300 text-xs">Pengelolaan Barang</div></div>
+  </div>
+  <div class="px-4 py-4 border-b border-brand-700">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-sm">{{if .user}}{{slice .user.FullName 0 1}}{{end}}</div>
+      <div class="min-w-0">
+        <div class="text-white text-sm font-semibold truncate">{{if .user}}{{.user.FullName}}{{end}}</div>
+        <div class="flex gap-1 mt-0.5 flex-wrap">{{if .claims}}{{range .claims.Roles}}<span class="text-xs bg-brand-600/60 text-brand-200 px-1.5 py-0.5 rounded">{{roleLabel .}}</span>{{end}}{{end}}</div>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+    <p class="text-brand-400 text-xs font-semibold uppercase tracking-wider px-4 mb-2">Menu Supervisor</p>
+    <a href="/supervisor/dashboard" class="sl">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </a>
+    <a href="/supervisor/items" class="sl">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      Kelola Barang
+    </a>
+    <a href="/supervisor/requests" class="sl active">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Permintaan Barang
+      {{if .stats}}{{if gt .stats.Pending 0}}
+      <span class="ml-auto bg-amber-400 text-amber-900 text-xs font-bold px-1.5 py-0.5 rounded-full">{{.stats.Pending}}</span>
+      {{end}}{{end}}
+    </a>
+  </nav>
+  <div class="px-3 py-4 border-t border-brand-700">
+    <form action="/logout" method="POST">
+      <button class="sl w-full text-left" style="color:#fca5a5" onmouseover="this.style.background='rgba(239,68,68,.15)'" onmouseout="this.style.background=''">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Keluar
+      </button>
+    </form>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main id="mc" class="ml-64 min-h-screen">
+  <header class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-20 flex items-center gap-3">
+    <button onclick="tog()" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div>
+      <h1 class="font-bold text-slate-800 text-lg">Permintaan Barang</h1>
+      <p class="text-slate-400 text-xs">Review dan setujui permintaan dari pegawai</p>
+    </div>
+  </header>
+
+  <div class="p-6">
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed top-6 right-6 z-50 bg-white border rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 text-sm font-medium min-w-64"></div>
+
+    <!-- Stat cards -->
+    {{if .stats}}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+        <p class="text-xs text-slate-500 uppercase tracking-wide font-medium">Total</p>
+        <p class="text-2xl font-bold text-slate-800 mt-1">{{.stats.Total}}</p>
+      </div>
+      <div class="bg-amber-50 rounded-xl border border-amber-200 p-4 shadow-sm">
+        <p class="text-xs text-amber-600 uppercase tracking-wide font-medium">Menunggu</p>
+        <p class="text-2xl font-bold text-amber-700 mt-1">{{.stats.Pending}}</p>
+      </div>
+      <div class="bg-green-50 rounded-xl border border-green-200 p-4 shadow-sm">
+        <p class="text-xs text-green-600 uppercase tracking-wide font-medium">Disetujui</p>
+        <p class="text-2xl font-bold text-green-700 mt-1">{{.stats.Approved}}</p>
+      </div>
+      <div class="bg-red-50 rounded-xl border border-red-200 p-4 shadow-sm">
+        <p class="text-xs text-red-500 uppercase tracking-wide font-medium">Ditolak</p>
+        <p class="text-2xl font-bold text-red-600 mt-1">{{.stats.Rejected}}</p>
+      </div>
+    </div>
+    {{end}}
+
+    <!-- Filter -->
+    <div class="flex gap-2 mb-5 flex-wrap">
+      <button onclick="fil('all',this)" class="fb text-sm font-semibold px-4 py-2 rounded-lg bg-brand-600 text-white">Semua</button>
+      <button onclick="fil('pending',this)" class="fb text-sm font-medium px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Menunggu</button>
+      <button onclick="fil('approved',this)" class="fb text-sm font-medium px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Disetujui</button>
+      <button onclick="fil('rejected',this)" class="fb text-sm font-medium px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Ditolak</button>
+    </div>
+
+    <!-- Request list -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      {{if .requests}}
+      <div class="divide-y divide-slate-100">
+        {{range .requests}}
+        <div class="req-row px-6 py-5 hover:bg-slate-50 transition" id="req-{{.ID}}" data-status="{{.Status}}">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1 min-w-0">
+              <!-- Header row -->
+              <div class="flex items-center gap-2 flex-wrap mb-1">
+                <p class="font-semibold text-slate-800">{{.ItemTitle}}</p>
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full
+                  {{if eq .Status "pending"}}bg-amber-100 text-amber-700
+                  {{else if eq .Status "approved"}}bg-green-100 text-green-700
+                  {{else}}bg-red-100 text-red-700{{end}}">
+                  {{if eq .Status "pending"}}Menunggu{{else if eq .Status "approved"}}Disetujui{{else}}Ditolak{{end}}
+                </span>
+              </div>
+              <!-- Meta info -->
+              <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                <span class="flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                  {{.UserName}}
+                </span>
+                {{if .UserTeams}}
+                <span class="flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  {{range $i,$t := .UserTeams}}{{if $i}}, {{end}}{{teamLabel $t}}{{end}}
+                </span>
+                {{end}}
+                <span class="flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                  {{.Quantity}} unit
+                </span>
+                <span>{{formatDateTime .CreatedAt}}</span>
+                {{if and .ApprovedAt (ne .Status "pending")}}<span>Diproses: {{formatDateTime .ApprovedAt}}</span>{{end}}
+              </div>
+              {{if .Notes}}
+              <p class="text-xs text-slate-500 mt-2 bg-slate-50 rounded-lg px-3 py-1.5 italic border border-slate-100">"{{.Notes}}"</p>
+              {{end}}
+            </div>
+
+            <!-- Action buttons — only for pending -->
+            {{if eq .Status "pending"}}
+            <div class="flex gap-2 flex-shrink-0 mt-1">
+              <button onclick="doApprove('{{.ID}}','{{.ItemTitle}}',{{.Quantity}})"
+                class="flex items-center gap-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                Setujui
+              </button>
+              <button onclick="doReject('{{.ID}}','{{.UserName}}')"
+                class="flex items-center gap-1.5 text-xs font-semibold bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                Tolak
+              </button>
+            </div>
+            {{end}}
+          </div>
+        </div>
+        {{end}}
+      </div>
+      {{else}}
+      <div class="px-6 py-14 text-center">
+        <svg class="w-10 h-10 text-slate-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p class="text-slate-400 text-sm font-medium">Tidak ada permintaan</p>
+      </div>
+      {{end}}
+    </div>
+  </div>
+</main>
+
+<script>
+  // Sidebar
+  let open = window.innerWidth >= 768;
+  function tog() { open = !open; apply(); }
+  function apply() {
+    const s=document.getElementById('sb'),m=document.getElementById('mc'),o=document.getElementById('ov'),mob=window.innerWidth<768;
+    if(open){s.classList.remove('hide');o.classList.toggle('show',mob);m.style.marginLeft=mob?'0':'16rem';}
+    else{s.classList.add('hide');o.classList.remove('show');m.style.marginLeft='0';}
+  }
+  window.addEventListener('resize',()=>{open=window.innerWidth>=768;apply();});
+  apply();
+
+  // Toast
+  function showToast(msg, ok=true) {
+    const t = document.getElementById('toast');
+    t.className = `fixed top-6 right-6 z-50 bg-white border rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 text-sm font-medium min-w-64 ${ok?'border-green-300 text-green-700':'border-red-300 text-red-600'}`;
+    t.innerHTML = `<span>${ok?'✅':'❌'}</span><span>${msg}</span>`;
+    t.classList.remove('hidden');
+    setTimeout(()=>t.classList.add('hidden'), 3000);
+  }
+
+  // Filter
+  function fil(f, btn) {
+    document.querySelectorAll('.fb').forEach(b=>{b.classList.remove('bg-brand-600','text-white');b.classList.add('bg-white','border','border-slate-200','text-slate-600');});
+    btn.classList.add('bg-brand-600','text-white');
+    btn.classList.remove('bg-white','border','border-slate-200','text-slate-600');
+    document.querySelectorAll('.req-row').forEach(r=>{
+      r.style.display = f==='all' || r.dataset.status===f ? '' : 'none';
+    });
+  }
+
+  // Approve
+  async function doApprove(id, itemTitle, qty) {
+    if (!confirm(`Setujui permintaan "${itemTitle}" sebanyak ${qty} unit?\n\nStok akan berkurang otomatis.`)) return;
+    const fd = new FormData();
+    const res = await fetch(`/supervisor/requests/${id}/approve`, {method:'POST', body:fd});
+    const data = await res.json();
+    if (res.ok) {
+      showToast(data.message);
+      // Update row tanpa reload
+      const row = document.getElementById(`req-${id}`);
+      if (row) {
+        row.dataset.status = 'approved';
+        // Ganti badge
+        const badge = row.querySelector('.text-amber-700');
+        if (badge) { badge.className='text-xs font-bold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700'; badge.textContent='Disetujui'; }
+        // Hapus tombol aksi
+        const btns = row.querySelector('.flex.gap-2.flex-shrink-0');
+        if (btns) btns.remove();
+      }
+      // Update pending count di sidebar badge
+      const badge = document.querySelector('.bg-amber-400');
+      if (badge) {
+        const cur = parseInt(badge.textContent) - 1;
+        if (cur <= 0) badge.remove(); else badge.textContent = cur;
+      }
+    } else {
+      showToast(data.error || 'Gagal', false);
+    }
+  }
+
+  // Reject
+  async function doReject(id, userName) {
+    if (!confirm(`Tolak permintaan dari ${userName}?`)) return;
+    const fd = new FormData();
+    const res = await fetch(`/supervisor/requests/${id}/reject`, {method:'POST', body:fd});
+    const data = await res.json();
+    if (res.ok) {
+      showToast(data.message);
+      const row = document.getElementById(`req-${id}`);
+      if (row) {
+        row.dataset.status = 'rejected';
+        const badge = row.querySelector('.text-amber-700');
+        if (badge) { badge.className='text-xs font-bold px-2.5 py-0.5 rounded-full bg-red-100 text-red-700'; badge.textContent='Ditolak'; }
+        const btns = row.querySelector('.flex.gap-2.flex-shrink-0');
+        if (btns) btns.remove();
+      }
+      const badge = document.querySelector('.bg-amber-400');
+      if (badge) {
+        const cur = parseInt(badge.textContent) - 1;
+        if (cur <= 0) badge.remove(); else badge.textContent = cur;
+      }
+    } else {
+      showToast(data.error || 'Gagal', false);
+    }
+  }
+</script>
+</body>
+</html>
