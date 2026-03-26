@@ -25,21 +25,25 @@
   </script>
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .sl{display:flex;align-items:center;gap:.75rem;padding:.625rem 1rem;border-radius:.5rem;font-size:.875rem;font-weight:500;transition:all .15s;color:#bae0fd;}
+   .sl{display:flex;align-items:center;gap:.75rem;padding:.625rem 1rem;border-radius:.5rem;font-size:.875rem;font-weight:500;transition:all .15s;color:#bae0fd;}
     .sl:hover{background:#074680;color:white;}
     .sl.active{background:white;color:#03539c;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1);}
-    #sb{transition:transform .25s ease;}
-    #sb.hide{transform:translateX(-100%);}
-    #mc{transition:margin-left .25s ease;}
-    #ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:29;}
-    #ov.show{display:block;}
+    .sl:not(.active) { color:#bae0fd; }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:50; align-items:center; justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .chip { display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; padding:2px 8px; border-radius:9999px; font-weight:500; }
+    #sidebar { transition: transform 0.25s ease; }
+    #sidebar.hide { transform: translateX(-100%); }
+    #main-content { transition: margin-left 0.25s ease; }
+    #sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:29; }
+    #sidebar-overlay.show { display:block; }
   </style>
 </head>
-<body class="bg-slate-50 antialiased">
+<body class="bg-slate-50 text-slate-800 antialiased">
 
 <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
-<div id="ov" onclick="tog()"></div>
-  {{template "sidebar" .}}
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+{{template "sidebar" .}}
 
 <!-- ═══════════════════ MAIN ═══════════════════ -->
 <main id="main-content" class="ml-64 min-h-screen">

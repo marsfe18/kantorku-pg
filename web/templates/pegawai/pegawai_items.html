@@ -12,8 +12,8 @@
     .sl{display:flex;align-items:center;gap:.75rem;padding:.625rem 1rem;border-radius:.5rem;font-size:.875rem;font-weight:500;transition:all .15s;color:#bae0fd;}
     .sl:hover{background:#074680;color:white;}
     .sl.active{background:white;color:#03539c;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1);}
-    #sb{transition:transform .25s ease;}
-    #sb.hide{transform:translateX(-100%);}
+    #sidebar{transition:transform .25s ease;}
+    #sidebar.hide{transform:translateX(-100%);}
     #mc{transition:margin-left .25s ease;}
     #ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:29;}
     #ov.show{display:block;}
@@ -25,7 +25,7 @@
 <div id="ov" onclick="tog()"></div>
 
 <!-- SIDEBAR -->
-  {{template "sidebar" .}}
+ {{template "sidebar" .}}
 
 <!-- MAIN -->
 <main id="mc" class="ml-64 min-h-screen">
@@ -146,7 +146,7 @@
   let open = window.innerWidth >= 768;
   function tog() { open = !open; apply(); }
   function apply() {
-    const s=document.getElementById('sb'),m=document.getElementById('mc'),o=document.getElementById('ov'),mob=window.innerWidth<768;
+    const s=document.getElementById('sidebar'),m=document.getElementById('mc'),o=document.getElementById('ov'),mob=window.innerWidth<768;
     if(open){s.classList.remove('hide');o.classList.toggle('show',mob);m.style.marginLeft=mob?'0':'16rem';}
     else{s.classList.add('hide');o.classList.remove('show');m.style.marginLeft='0';}
   }
