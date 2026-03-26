@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -20,7 +21,8 @@ func main() {
 
 	r := gin.Default()
 
-	r.SetFuncMap(template.FuncMap{
+	// ── Template FuncMap ────────────────────────────────────────────────────
+	funcMap := template.FuncMap{
 		"hasRole": func(roles []string, role string) bool {
 			for _, r := range roles {
 				if r == role {
@@ -79,24 +81,45 @@ func main() {
 			return template.JS(b)
 		},
 		"strSlice": func(items ...string) []string { return items },
-	})
-
-	r.LoadHTMLFiles(
-		"web/templates/auth/login.html",
-		"web/templates/auth/register.html",
-		"web/templates/admin/admin_dashboard.html",
-		"web/templates/admin/admin_users.html",
-		"web/templates/supervisor/supervisor_dashboard.html",
-		"web/templates/supervisor/supervisor_items.html",
-		"web/templates/supervisor/supervisor_requests.html",
-		"web/templates/supervisor/supervisor_recap.html",
-		"web/templates/supervisor/supervisor_history.html",
-		"web/templates/pegawai/pegawai_dashboard.html",
-		"web/templates/pegawai/pegawai_items.html",
-		"web/templates/pegawai/pegawai_requests.html",
-		"web/templates/error.html",
-		"web/templates/coming_soon.html",
-	)
+	}
+ 
+	// ── Load semua template sekaligus (termasuk partial sidebar) ───────────
+	//
+	// Pola folder:
+	//   web/templates/sidebar/sidebar_dinamis.html   ← partial (define "sidebar")
+	//   web/templates/auth/login.html
+	//   web/templates/admin/admin_dashboard.html
+	//   web/templates/supervisor/supervisor_dashboard.html
+	//   web/templates/pegawai/pegawai_dashboard.html
+	//   web/templates/error.html
+	//   web/templates/coming_soon.html
+	//
+	templ := template.New("").Funcs(funcMap)
+ 
+	patterns := []string{
+		"web/templates/sidebar/*.html",    // ← sidebar partial dimuat pertama
+		"web/templates/auth/*.html",
+		"web/templates/admin/*.html",
+		"web/templates/supervisor/*.html",
+		"web/templates/pegawai/*.html",
+		"web/templates/*.html",            // error.html, coming_soon.html, dll
+	}
+ 
+	for _, pattern := range patterns {
+		files, err := filepath.Glob(pattern)
+		if err != nil {
+			log.Fatalf("Glob error untuk pattern %q: %v", pattern, err)
+		}
+		if len(files) == 0 {
+			log.Printf("⚠️  Tidak ada file ditemukan untuk pattern: %s", pattern)
+			continue
+		}
+		if _, err := templ.ParseFiles(files...); err != nil {
+			log.Fatalf("Gagal parse template %q: %v", pattern, err)
+		}
+	}
+ 
+	r.SetHTMLTemplate(templ)
 	r.Static("/static", "./web/static")
 
 	// Public

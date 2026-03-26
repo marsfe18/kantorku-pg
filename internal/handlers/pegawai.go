@@ -1,3 +1,4 @@
+// internal/handlers/pegawai_handler.go
 package handlers
 
 import (
@@ -22,7 +23,6 @@ func PegawaiDashboard(c *gin.Context) {
 		return
 	}
 
-	// Permintaan milik user ini
 	myRequests, _ := requests.GetByUser(claims.UserID)
 
 	pendingCount, approvedCount, rejectedCount := 0, 0, 0
@@ -37,22 +37,22 @@ func PegawaiDashboard(c *gin.Context) {
 		}
 	}
 
-	// 5 permintaan terbaru
 	recent := myRequests
 	if len(recent) > 5 {
 		recent = recent[:5]
 	}
 
-	c.HTML(http.StatusOK, "pegawai_dashboard.html", gin.H{
+	c.HTML(http.StatusOK, "pegawai_dashboard.html", MergeH(gin.H{
 		"title":          "Dashboard - KantorKu",
 		"user":           user,
 		"claims":         claims,
+		"activePage":     "pegawai_dashboard", // ← highlight sidebar
 		"pendingCount":   pendingCount,
 		"approvedCount":  approvedCount,
 		"rejectedCount":  rejectedCount,
 		"totalRequests":  len(myRequests),
 		"recentRequests": recent,
-	})
+	}, SidebarData(claims)))
 }
 
 // ── Pegawai: Lihat Barang ─────────────────────────────────────────────────────
@@ -60,15 +60,15 @@ func PegawaiDashboard(c *gin.Context) {
 func PegawaiItems(c *gin.Context) {
 	claims := c.MustGet(middleware.UserClaimsKey).(*auth.Claims)
 	user, _ := auth.GetUserByID(claims.UserID)
-
 	activeItems, _ := items.GetActive()
 
-	c.HTML(http.StatusOK, "pegawai_items.html", gin.H{
-		"title":  "Barang Tersedia - KantorKu",
-		"user":   user,
-		"claims": claims,
-		"items":  activeItems,
-	})
+	c.HTML(http.StatusOK, "pegawai_items.html", MergeH(gin.H{
+		"title":      "Barang Tersedia - KantorKu",
+		"user":       user,
+		"claims":     claims,
+		"activePage": "pegawai_items", // ← highlight sidebar
+		"items":      activeItems,
+	}, SidebarData(claims)))
 }
 
 // ── Pegawai: Submit Request ───────────────────────────────────────────────────
@@ -86,7 +86,6 @@ func PegawaiCreateRequest(c *gin.Context) {
 		return
 	}
 
-	// Ambil data user lengkap (untuk tim)
 	user, err := auth.GetUserByID(claims.UserID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memuat data user"})
@@ -114,13 +113,13 @@ func PegawaiCreateRequest(c *gin.Context) {
 func PegawaiRequests(c *gin.Context) {
 	claims := c.MustGet(middleware.UserClaimsKey).(*auth.Claims)
 	user, _ := auth.GetUserByID(claims.UserID)
-
 	myRequests, _ := requests.GetByUser(claims.UserID)
 
-	c.HTML(http.StatusOK, "pegawai_requests.html", gin.H{
-		"title":    "Riwayat Permintaan - KantorKu",
-		"user":     user,
-		"claims":   claims,
-		"requests": myRequests,
-	})
+	c.HTML(http.StatusOK, "pegawai_requests.html", MergeH(gin.H{
+		"title":      "Riwayat Permintaan - KantorKu",
+		"user":       user,
+		"claims":     claims,
+		"activePage": "pegawai_requests", // ← highlight sidebar
+		"requests":   myRequests,
+	}, SidebarData(claims)))
 }

@@ -1,3 +1,4 @@
+// internal/handlers/supervisor_handler.go
 package handlers
 
 import (
@@ -29,6 +30,7 @@ func SupervisorDashboard(c *gin.Context) {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"message": "Gagal memuat data"})
 		return
 	}
+
 	allItems, _ := items.GetAll()
 	activeCount, deletedCount, lowStockCount := 0, 0, 0
 	var lowItems []*models.Item
@@ -46,11 +48,18 @@ func SupervisorDashboard(c *gin.Context) {
 		}
 	}
 	stats, _ := requests.GetStats()
-	c.HTML(http.StatusOK, "supervisor_dashboard.html", gin.H{
-		"title": "Dashboard Supervisor - KantorKu", "user": user, "claims": claims,
-		"activeCount": activeCount, "deletedCount": deletedCount,
-		"lowStockCount": lowStockCount, "lowItems": lowItems, "reqStats": stats,
-	})
+
+	c.HTML(http.StatusOK, "supervisor_dashboard.html", MergeH(gin.H{
+		"title":         "Dashboard Supervisor - KantorKu",
+		"user":          user,
+		"claims":        claims,
+		"activePage":    "supervisor_dashboard", // ← highlight sidebar
+		"activeCount":   activeCount,
+		"deletedCount":  deletedCount,
+		"lowStockCount": lowStockCount,
+		"lowItems":      lowItems,
+		"reqStats":      stats,
+	}, SidebarData(claims)))
 }
 
 // ── Items ─────────────────────────────────────────────────────────────────────
@@ -59,9 +68,14 @@ func SupervisorItems(c *gin.Context) {
 	claims := c.MustGet(middleware.UserClaimsKey).(*auth.Claims)
 	user, _ := auth.GetUserByID(claims.UserID)
 	allItems, _ := items.GetAll()
-	c.HTML(http.StatusOK, "supervisor_items.html", gin.H{
-		"title": "Kelola Barang - KantorKu", "user": user, "claims": claims, "items": allItems,
-	})
+
+	c.HTML(http.StatusOK, "supervisor_items.html", MergeH(gin.H{
+		"title":      "Kelola Barang - KantorKu",
+		"user":       user,
+		"claims":     claims,
+		"activePage": "supervisor_items", // ← highlight sidebar
+		"items":      allItems,
+	}, SidebarData(claims)))
 }
 
 func SupervisorGetItem(c *gin.Context) {
@@ -157,10 +171,15 @@ func SupervisorRequests(c *gin.Context) {
 	user, _ := auth.GetUserByID(claims.UserID)
 	allReqs, _ := requests.GetAll()
 	stats, _ := requests.GetStats()
-	c.HTML(http.StatusOK, "supervisor_requests.html", gin.H{
-		"title": "Kelola Permintaan - KantorKu", "user": user, "claims": claims,
-		"requests": allReqs, "stats": stats,
-	})
+
+	c.HTML(http.StatusOK, "supervisor_requests.html", MergeH(gin.H{
+		"title":      "Kelola Permintaan - KantorKu",
+		"user":       user,
+		"claims":     claims,
+		"activePage": "supervisor_requests", // ← highlight sidebar
+		"requests":   allReqs,
+		"stats":      stats,
+	}, SidebarData(claims)))
 }
 
 func SupervisorApproveRequest(c *gin.Context) {
@@ -190,7 +209,7 @@ func SupervisorRecap(c *gin.Context) {
 	now := time.Now()
 	year, _ := strconv.Atoi(c.DefaultQuery("year", strconv.Itoa(now.Year())))
 	month, _ := strconv.Atoi(c.DefaultQuery("month", strconv.Itoa(int(now.Month()))))
-	recapType := c.DefaultQuery("type", "request") // "request" atau "stock"
+	recapType := c.DefaultQuery("type", "request")
 
 	p := recap.RequestRecapParams{Year: year, Month: month}
 
@@ -204,7 +223,6 @@ func SupervisorRecap(c *gin.Context) {
 	}
 
 	years := recap.GetAvailableYears()
-	// Pastikan tahun saat ini selalu ada
 	hasCurrentYear := false
 	for _, y := range years {
 		if y == now.Year() {
@@ -225,18 +243,21 @@ func SupervisorRecap(c *gin.Context) {
 		{"val": 11, "label": "November"}, {"val": 12, "label": "Desember"},
 	}
 
-	c.HTML(http.StatusOK, "supervisor_recap.html", gin.H{
-		"title": "Rekap - KantorKu", "user": user, "claims": claims,
-		"recapType":       recapType,
-		"year":            year,
-		"month":           month,
-		"years":           years,
-		"months":          months,
-		"reqRecapByTeam":  groupReqRecapByTeam(reqRecap),
+	c.HTML(http.StatusOK, "supervisor_recap.html", MergeH(gin.H{
+		"title":            "Rekap - KantorKu",
+		"user":             user,
+		"claims":           claims,
+		"activePage":       "supervisor_recap", // ← highlight sidebar
+		"recapType":        recapType,
+		"year":             year,
+		"month":            month,
+		"years":            years,
+		"months":           months,
+		"reqRecapByTeam":   groupReqRecapByTeam(reqRecap),
 		"stockRecapByTeam": groupStockRecapByTeam(stockRecap),
-		"hasReqData":      len(reqRecap) > 0,
-		"hasStockData":    len(stockRecap) > 0,
-	})
+		"hasReqData":       len(reqRecap) > 0,
+		"hasStockData":     len(stockRecap) > 0,
+	}, SidebarData(claims)))
 }
 
 // ── Export Excel ──────────────────────────────────────────────────────────────
@@ -276,9 +297,9 @@ func SupervisorExportRecap(c *gin.Context) {
 		Border:    borderStyle(),
 	})
 	styleNum, _ := f.NewStyle(&excelize.Style{
-		Alignment:  &excelize.Alignment{Horizontal: "center", Vertical: "center"},
-		Border:     borderStyle(),
-		NumFmt:     1,
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+		Border:    borderStyle(),
+		NumFmt:    1,
 	})
 	styleTitle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Size: 12},
@@ -292,7 +313,6 @@ func SupervisorExportRecap(c *gin.Context) {
 			return
 		}
 
-		// Kelompokkan per tim
 		teamOrder := []string{"produksi", "distribusi", "ipds", "sosial", "neraca"}
 		teamData := map[string][]*recap.RequestRecapRow{}
 		for _, row := range data {
@@ -302,7 +322,6 @@ func SupervisorExportRecap(c *gin.Context) {
 		sheetName := "Rekap Permintaan"
 		f.SetSheetName("Sheet1", sheetName)
 
-		// Judul
 		f.MergeCell(sheetName, "A1", "F1")
 		f.SetCellValue(sheetName, "A1", fmt.Sprintf("REKAP PERMINTAAN BARANG - %s", strings.ToUpper(periodLabel)))
 		f.SetCellStyle(sheetName, "A1", "F1", styleTitle)
@@ -315,19 +334,17 @@ func SupervisorExportRecap(c *gin.Context) {
 				continue
 			}
 
-			// Header tim
 			f.MergeCell(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("E%d", row))
 			f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "TIM: "+strings.ToUpper(teamLabels[team]))
 			teamStyle, _ := f.NewStyle(&excelize.Style{
-				Font: &excelize.Font{Bold: true, Size: 10},
-				Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"e0effe"}},
+				Font:   &excelize.Font{Bold: true, Size: 10},
+				Fill:   excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"e0effe"}},
 				Border: borderStyle(),
 			})
 			f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("E%d", row), teamStyle)
 			f.SetRowHeight(sheetName, row, 18)
 			row++
 
-			// Header kolom
 			headers := []string{"No", "Kode Barang", "Nama Barang", "Satuan", "Jumlah"}
 			cols := []string{"A", "B", "C", "D", "E"}
 			for i, h := range headers {
@@ -350,11 +367,10 @@ func SupervisorExportRecap(c *gin.Context) {
 				row++
 			}
 
-			// Total
 			totalStyle, _ := f.NewStyle(&excelize.Style{
-				Font:   &excelize.Font{Bold: true},
-				Fill:   excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"f8fafc"}},
-				Border: borderStyle(),
+				Font:      &excelize.Font{Bold: true},
+				Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"f8fafc"}},
+				Border:    borderStyle(),
 				Alignment: &excelize.Alignment{Horizontal: "center"},
 			})
 			f.MergeCell(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("D%d", row))
@@ -364,7 +380,6 @@ func SupervisorExportRecap(c *gin.Context) {
 			row += 2
 		}
 
-		// Set lebar kolom
 		f.SetColWidth(sheetName, "A", "A", 5)
 		f.SetColWidth(sheetName, "B", "B", 14)
 		f.SetColWidth(sheetName, "C", "C", 30)
@@ -372,7 +387,6 @@ func SupervisorExportRecap(c *gin.Context) {
 		f.SetColWidth(sheetName, "E", "E", 12)
 
 	} else {
-		// Rekap stok
 		data, err := recap.GetStockRecap(p)
 		if err != nil || len(data) == 0 {
 			c.JSON(http.StatusOK, gin.H{"message": "Tidak ada data untuk diekspor"})
@@ -403,8 +417,8 @@ func SupervisorExportRecap(c *gin.Context) {
 			f.MergeCell(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("H%d", row))
 			f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "TIM: "+strings.ToUpper(teamLabels[team]))
 			teamStyle, _ := f.NewStyle(&excelize.Style{
-				Font: &excelize.Font{Bold: true, Size: 10},
-				Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"e0effe"}},
+				Font:   &excelize.Font{Bold: true, Size: 10},
+				Fill:   excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"e0effe"}},
 				Border: borderStyle(),
 			})
 			f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("H%d", row), teamStyle)
@@ -443,7 +457,6 @@ func SupervisorExportRecap(c *gin.Context) {
 		f.SetColWidth(sheetName, "E", "H", 12)
 	}
 
-	// Tulis ke response
 	typeLabel := "permintaan"
 	if recapType == "stock" {
 		typeLabel = "persediaan"
@@ -502,7 +515,6 @@ func SupervisorItemHistory(c *gin.Context) {
 	claims := c.MustGet(middleware.UserClaimsKey).(*auth.Claims)
 	user, _ := auth.GetUserByID(claims.UserID)
 
-	// Ambil semua history dari semua barang, dengan info barang
 	rows, err := database.DB.Query(
 		`SELECT ih.id, ih.item_id, ih.item_title, ih.item_code, ih.item_unit,
 		        ih.change_type, ih.change_qty, ih.stock_before, ih.stock_after,
@@ -517,10 +529,6 @@ func SupervisorItemHistory(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	type HistoryRow struct {
-		models.ItemHistory
-	}
-
 	var history []models.ItemHistory
 	for rows.Next() {
 		h := models.ItemHistory{}
@@ -533,18 +541,16 @@ func SupervisorItemHistory(c *gin.Context) {
 		}
 	}
 
-	// Ambil list barang untuk filter dropdown
 	allItems, _ := items.GetAll()
-
-	// Filter by item_id jika ada query param
 	filterItemID := c.Query("item_id")
 
-	c.HTML(http.StatusOK, "supervisor_history.html", gin.H{
+	c.HTML(http.StatusOK, "supervisor_history.html", MergeH(gin.H{
 		"title":        "History Stok - KantorKu",
 		"user":         user,
 		"claims":       claims,
+		"activePage":   "supervisor_history", // ← highlight sidebar
 		"history":      history,
 		"allItems":     allItems,
 		"filterItemID": filterItemID,
-	})
+	}, SidebarData(claims)))
 }

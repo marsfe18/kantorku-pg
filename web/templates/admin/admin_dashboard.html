@@ -26,83 +26,21 @@
   </script>
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .sidebar-link { display:flex; align-items:center; gap:0.75rem; padding:0.625rem 1rem; border-radius:0.5rem; font-size:0.875rem; font-weight:500; transition:all 0.15s; }
-    .sidebar-link:hover { background:#074680; color:white; }
-    .sidebar-link.active { background:white; color:#03539c; font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
-    .sidebar-link:not(.active) { color:#bae0fd; }
-    #sidebar { transition: transform 0.25s ease; }
-    #sidebar.hidden-sidebar { transform: translateX(-100%); }
-    #main-content { transition: margin-left 0.25s ease; }
-    #sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:29; }
-    #sidebar-overlay.show { display:block; }
+    .sl{display:flex;align-items:center;gap:.75rem;padding:.625rem 1rem;border-radius:.5rem;font-size:.875rem;font-weight:500;transition:all .15s;color:#bae0fd;}
+    .sl:hover{background:#074680;color:white;}
+    .sl.active{background:white;color:#03539c;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1);}
+    #sb{transition:transform .25s ease;}
+    #sb.hide{transform:translateX(-100%);}
+    #mc{transition:margin-left .25s ease;}
+    #ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:29;}
+    #ov.show{display:block;}
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased">
-
-  <!-- Sidebar overlay (mobile) -->
-  <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<body class="bg-slate-50 antialiased">
+<div id="ov" onclick="tog()"></div>
 
   <!-- Sidebar -->
-  <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-brand-800 flex flex-col z-30">
-    <!-- Logo -->
-    <div class="flex items-center gap-3 px-6 py-5 border-b border-brand-700">
-      <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
-        <svg class="w-5 h-5 text-brand-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-        </svg>
-      </div>
-      <div>
-        <div class="text-white font-bold text-base leading-tight">KantorKu</div>
-        <div class="text-brand-300 text-xs">Pengelolaan Barang</div>
-      </div>
-    </div>
-
-    <!-- User info -->
-    <div class="px-4 py-4 border-b border-brand-700">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-          {{if .user}}{{slice .user.FullName 0 1}}{{end}}
-        </div>
-        <div class="min-w-0">
-          <div class="text-white text-sm font-semibold truncate">{{if .user}}{{.user.FullName}}{{end}}</div>
-          <div class="flex gap-1 mt-0.5 flex-wrap">
-            {{if .claims}}{{range .claims.Roles}}
-            <span class="text-xs bg-brand-600/60 text-brand-200 px-1.5 py-0.5 rounded">{{roleLabel .}}</span>
-            {{end}}{{end}}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Nav -->
-    <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-      <p class="text-brand-400 text-xs font-semibold uppercase tracking-wider px-4 mb-2">Menu Admin</p>
-      <a href="/admin/dashboard" class="sidebar-link active">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-        Dashboard
-      </a>
-      <a href="/admin/users" class="sidebar-link">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-        Kelola Pengguna
-      </a>
-    </nav>
-
-    <!-- Logout -->
-    <div class="px-3 py-4 border-t border-brand-700">
-      <form action="/logout" method="POST">
-        <button type="submit" class="sidebar-link w-full text-left" style="color:#fca5a5" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background=''">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Keluar
-        </button>
-      </form>
-    </div>
-  </aside>
+  {{template "sidebar" .}}
 
   <!-- Main Content -->
   <main id="main-content" class="ml-64 min-h-screen">

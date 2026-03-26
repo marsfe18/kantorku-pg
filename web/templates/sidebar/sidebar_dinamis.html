@@ -1,0 +1,157 @@
+{{define "sidebar"}}
+<aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-brand-800 flex flex-col z-30" style="transition: transform 0.25s ease;">
+  <!-- Logo -->
+  <div class="flex items-center gap-3 px-6 py-5 border-b border-brand-700">
+    <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
+      <svg class="w-5 h-5 text-brand-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+      </svg>
+    </div>
+    <div>
+      <div class="text-white font-bold text-base leading-tight">KantorKu</div>
+      <div class="text-brand-300 text-xs">Pengelolaan Barang</div>
+    </div>
+  </div>
+
+  <!-- User info -->
+  <div class="px-4 py-4 border-b border-brand-700">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+        {{if .user}}{{slice .user.FullName 0 1}}{{end}}
+      </div>
+      <div class="min-w-0">
+        <div class="text-white text-sm font-semibold truncate">{{if .user}}{{.user.FullName}}{{end}}</div>
+        <div class="flex gap-1 mt-0.5 flex-wrap">
+          {{if .claims}}{{range .claims.Roles}}
+            <span class="text-xs bg-brand-600/60 text-brand-200 px-1.5 py-0.5 rounded">{{roleLabel .}}</span>
+          {{end}}{{end}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+    {{if .claims}}
+
+      {{/* ═══════════════ MENU ADMIN ═══════════════ */}}
+      {{if hasRole .claims.Roles "admin"}}
+      <p class="text-brand-400 text-xs font-semibold uppercase tracking-wider px-4 pt-1 pb-2">Admin</p>
+
+      <a href="/admin/dashboard"
+         class="sl {{if eq .activePage "admin_dashboard"}}active{{end}}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        Dashboard Admin
+      </a>
+
+      <a href="/admin/users"
+         class="sl {{if eq .activePage "admin_users"}}active{{end}}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        Kelola Pengguna
+      </a>
+      {{end}}
+
+      {{/* ═══════════════ MENU SUPERVISOR ═══════════════ */}}
+      {{if hasRole .claims.Roles "supervisor"}}
+      <p class="text-brand-400 text-xs font-semibold uppercase tracking-wider px-4 pb-2 {{if hasRole .claims.Roles "admin"}}pt-4{{else}}pt-1{{end}}">Supervisor</p>
+
+      <a href="/supervisor/dashboard"
+         class="sl {{if eq .activePage "supervisor_dashboard"}}active{{end}}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        Dashboard Supervisor
+      </a>
+
+      <a href="/supervisor/items"
+         class="sl {{if eq .activePage "supervisor_items"}}active{{end}}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+        Kelola Barang
+      </a>
+
+      <a href="/supervisor/requests"
+         class="sl {{if eq .activePage "supervisor_requests"}}active{{end}}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        Permintaan Barang
+        {{if .sidebarPendingCount}}{{if gt .sidebarPendingCount 0}}
+        <span class="ml-auto bg-amber-400 text-amber-900 text-xs font-bold px-1.5 py-0.5 rounded-full min-w-5 text-center">
+          {{.sidebarPendingCount}}
+        </span>
+        {{end}}{{end}}
+      </a>
+
+      <a href="/supervisor/history"
+         class="sl {{if eq .activePage "supervisor_history"}}active{{end}}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        History Stok
+      </a>
+
+      <a href="/supervisor/recap"
+         class="sl {{if eq .activePage "supervisor_recap"}}active{{end}}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Rekap
+      </a>
+      {{end}}
+
+      {{/* ═══════════════ MENU PEGAWAI ═══════════════ */}}
+      {{if hasRole .claims.Roles "pegawai"}}
+      <p class="text-brand-400 text-xs font-semibold uppercase tracking-wider px-4 pb-2
+        {{if or (hasRole .claims.Roles "admin") (hasRole .claims.Roles "supervisor")}}pt-4{{else}}pt-1{{end}}">
+        Pegawai
+      </p>
+
+      <a href="/pegawai/dashboard"
+         class="sl {{if eq .activePage "pegawai_dashboard"}}active{{end}}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        Dashboard
+      </a>
+
+      <a href="/pegawai/items"
+         class="sl {{if eq .activePage "pegawai_items"}}active{{end}}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+        Minta Barang
+      </a>
+
+      <a href="/pegawai/requests"
+         class="sl {{if eq .activePage "pegawai_requests"}}active{{end}}">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        Riwayat Permintaan
+      </a>
+      {{end}}
+
+    {{end}}
+  </nav>
+
+  <!-- Logout -->
+  <div class="px-3 py-4 border-t border-brand-700">
+    <form action="/logout" method="POST">
+      <button type="submit" class="sidebar-link w-full text-left" style="color:#fca5a5"
+        onmouseover="this.style.background='rgba(239,68,68,0.15)'"
+        onmouseout="this.style.background=''">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+        Keluar
+      </button>
+    </form>
+  </div>
+</aside>
+{{end}}

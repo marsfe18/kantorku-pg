@@ -1,3 +1,4 @@
+// internal/handlers/auth_handler.go
 package handlers
 
 import (
@@ -57,7 +58,6 @@ func HandleRegister(c *gin.Context) {
 	fullName := strings.TrimSpace(c.PostForm("full_name"))
 	teams := c.PostFormArray("teams")
 
-	// Validasi tim
 	validTeams := map[string]bool{
 		models.TimProduksi: true, models.TimDistribusi: true,
 		models.TimIPDS: true, models.TimSosial: true,
@@ -142,17 +142,18 @@ func AdminDashboard(c *gin.Context) {
 		}
 	}
 
-	c.HTML(http.StatusOK, "admin_dashboard.html", gin.H{
+	c.HTML(http.StatusOK, "admin_dashboard.html", MergeH(gin.H{
 		"title":        "Dashboard Admin - KantorKu",
 		"user":         user,
 		"claims":       claims,
+		"activePage":   "admin_dashboard", // ← untuk highlight sidebar
 		"totalUsers":   len(allUsers),
 		"totalPending": len(pendingUsers),
 		"adminCount":   adminCount,
 		"supvCount":    supvCount,
 		"pegawaiCount": pegawaiCount,
 		"pendingUsers": pendingUsers,
-	})
+	}, SidebarData(claims)))
 }
 
 // ── Admin Users ───────────────────────────────────────────────────────────────
@@ -162,14 +163,15 @@ func AdminUsers(c *gin.Context) {
 	user, _ := auth.GetUserByID(claims.UserID)
 	allUsers, _ := auth.GetAllUsers()
 
-	c.HTML(http.StatusOK, "admin_users.html", gin.H{
+	c.HTML(http.StatusOK, "admin_users.html", MergeH(gin.H{
 		"title":      "Kelola Pengguna - KantorKu",
 		"user":       user,
 		"claims":     claims,
+		"activePage": "admin_users", // ← untuk highlight sidebar
 		"users":      allUsers,
 		"allRoles":   []string{models.RoleAdmin, models.RoleSupervisor, models.RolePegawai},
 		"allTeams":   []string{models.TimProduksi, models.TimDistribusi, models.TimIPDS, models.TimSosial, models.TimNeraca, models.TimUmum},
-	})
+	}, SidebarData(claims)))
 }
 
 func AdminApproveUser(c *gin.Context) {
@@ -181,7 +183,6 @@ func AdminApproveUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Akun berhasil disetujui"})
 }
 
-// AdminCreateUser — admin membuat akun baru langsung approved
 func AdminCreateUser(c *gin.Context) {
 	username := strings.TrimSpace(c.PostForm("username"))
 	email := strings.TrimSpace(c.PostForm("email"))
@@ -214,7 +215,6 @@ func AdminCreateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Akun berhasil dibuat"})
 }
 
-// AdminChangePassword — admin ganti password user
 func AdminChangePassword(c *gin.Context) {
 	userID := c.Param("id")
 	newPassword := c.PostForm("password")
@@ -229,10 +229,8 @@ func AdminChangePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Password berhasil diubah"})
 }
 
-// AdminToggleActive — aktifkan/nonaktifkan akun
 func AdminToggleActive(c *gin.Context) {
 	userID := c.Param("id")
-	// Cek current status
 	user, err := auth.GetUserByID(userID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User tidak ditemukan"})
@@ -250,7 +248,6 @@ func AdminToggleActive(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": msg, "is_active": newActive})
 }
 
-// AdminAddRole — tambah role ke user
 func AdminAddRole(c *gin.Context) {
 	userID := c.Param("id")
 	role := c.PostForm("role")
@@ -268,7 +265,6 @@ func AdminAddRole(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Role berhasil ditambahkan"})
 }
 
-// AdminRemoveRole — hapus role dari user
 func AdminRemoveRole(c *gin.Context) {
 	userID := c.Param("id")
 	role := c.PostForm("role")
@@ -279,7 +275,6 @@ func AdminRemoveRole(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Role berhasil dihapus"})
 }
 
-// AdminAddTeam — tambah tim ke user
 func AdminAddTeam(c *gin.Context) {
 	userID := c.Param("id")
 	team := c.PostForm("team")
@@ -298,7 +293,6 @@ func AdminAddTeam(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Tim berhasil ditambahkan"})
 }
 
-// AdminRemoveTeam — hapus tim dari user
 func AdminRemoveTeam(c *gin.Context) {
 	userID := c.Param("id")
 	team := c.PostForm("team")
