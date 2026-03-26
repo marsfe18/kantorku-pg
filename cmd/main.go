@@ -67,6 +67,8 @@ func main() {
 				return "Sosial"
 			case models.TimNeraca:
 				return "Neraca"
+			case models.TimUmum:
+				return "Umum"
 			}
 			return team
 		},

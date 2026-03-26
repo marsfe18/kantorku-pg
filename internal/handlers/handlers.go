@@ -55,6 +55,20 @@ func HandleRegister(c *gin.Context) {
 	password := c.PostForm("password")
 	confirmPassword := c.PostForm("confirm_password")
 	fullName := strings.TrimSpace(c.PostForm("full_name"))
+	teams := c.PostFormArray("teams")
+
+	// Validasi tim
+	validTeams := map[string]bool{
+		models.TimProduksi: true, models.TimDistribusi: true,
+		models.TimIPDS: true, models.TimSosial: true,
+		models.TimNeraca: true, models.TimUmum: true,
+	}
+	var cleanTeams []string
+	for _, t := range teams {
+		if validTeams[t] {
+			cleanTeams = append(cleanTeams, t)
+		}
+	}
 
 	var errs []string
 	if len(username) < 3 {
@@ -73,7 +87,7 @@ func HandleRegister(c *gin.Context) {
 		errs = append(errs, "Konfirmasi password tidak cocok")
 	}
 
-	formData := gin.H{"username": username, "email": email, "full_name": fullName}
+	formData := gin.H{"username": username, "email": email, "full_name": fullName, "teams": teams}
 	if len(errs) > 0 {
 		c.HTML(http.StatusBadRequest, "register.html", gin.H{
 			"title": "Daftar Akun - KantorKu", "errors": errs, "form": formData,
@@ -82,7 +96,8 @@ func HandleRegister(c *gin.Context) {
 	}
 
 	_, err := auth.Register(auth.RegisterInput{
-		Username: username, Email: email, Password: password, FullName: fullName,
+		Username: username, Email: email, Password: password,
+		FullName: fullName, Teams: cleanTeams,
 	})
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "register.html", gin.H{
@@ -153,7 +168,7 @@ func AdminUsers(c *gin.Context) {
 		"claims":     claims,
 		"users":      allUsers,
 		"allRoles":   []string{models.RoleAdmin, models.RoleSupervisor, models.RolePegawai},
-		"allTeams":   []string{models.TimProduksi, models.TimDistribusi, models.TimIPDS, models.TimSosial, models.TimNeraca},
+		"allTeams":   []string{models.TimProduksi, models.TimDistribusi, models.TimIPDS, models.TimSosial, models.TimNeraca, models.TimUmum},
 	})
 }
 
@@ -270,7 +285,7 @@ func AdminAddTeam(c *gin.Context) {
 	team := c.PostForm("team")
 	validTeams := map[string]bool{
 		models.TimProduksi: true, models.TimDistribusi: true, models.TimIPDS: true,
-		models.TimSosial: true, models.TimNeraca: true,
+		models.TimSosial: true, models.TimNeraca: true, models.TimUmum: true,
 	}
 	if !validTeams[team] {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Tim tidak valid"})

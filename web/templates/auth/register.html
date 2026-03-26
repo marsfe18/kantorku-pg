@@ -23,7 +23,9 @@
       }
     }
   </script>
-  <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+  <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  .team-opt:has(input:checked) { background:#eff6ff; border-color:#0269c1; }
+  </style>
 </head>
 <body class="bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 min-h-screen flex items-center justify-center p-4">
 
@@ -32,7 +34,7 @@
     <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl"></div>
   </div>
 
-  <div class="relative w-full max-w-md">
+  <div class="relative w-full max-w-lg">
     <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
       <!-- Header -->
       <div class="bg-gradient-to-br from-brand-700 to-brand-900 px-8 py-7 text-center">
@@ -124,6 +126,43 @@
               class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-slate-50 focus:bg-white transition"
               required
             />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Tim <span class="font-normal text-slate-400 text-xs">(bisa pilih lebih dari satu)</span></label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="team-opt flex items-center gap-2 p-2.5 border border-slate-200 rounded-lg hover:bg-brand-50 hover:border-brand-300 transition cursor-pointer">
+                <input type="checkbox" name="teams" value="produksi" class="accent-brand-600 w-4 h-4 flex-shrink-0"
+                  {{if .form}}{{range .form.teams}}{{if eq . "produksi"}}checked{{end}}{{end}}{{end}}/>
+                <span class="font-medium text-xs text-slate-700">Produksi</span>
+              </label>
+              <label class="team-opt flex items-center gap-2 p-2.5 border border-slate-200 rounded-lg hover:bg-brand-50 hover:border-brand-300 transition cursor-pointer">
+                <input type="checkbox" name="teams" value="distribusi" class="accent-brand-600 w-4 h-4 flex-shrink-0"
+                  {{if .form}}{{range .form.teams}}{{if eq . "distribusi"}}checked{{end}}{{end}}{{end}}/>
+                <span class="font-medium text-xs text-slate-700">Distribusi</span>
+              </label>
+              <label class="team-opt flex items-center gap-2 p-2.5 border border-slate-200 rounded-lg hover:bg-brand-50 hover:border-brand-300 transition cursor-pointer">
+                <input type="checkbox" name="teams" value="ipds" class="accent-brand-600 w-4 h-4 flex-shrink-0"
+                  {{if .form}}{{range .form.teams}}{{if eq . "ipds"}}checked{{end}}{{end}}{{end}}/>
+                <span class="font-medium text-xs text-slate-700">IPDS</span>
+              </label>
+              <label class="team-opt flex items-center gap-2 p-2.5 border border-slate-200 rounded-lg hover:bg-brand-50 hover:border-brand-300 transition cursor-pointer">
+                <input type="checkbox" name="teams" value="sosial" class="accent-brand-600 w-4 h-4 flex-shrink-0"
+                  {{if .form}}{{range .form.teams}}{{if eq . "sosial"}}checked{{end}}{{end}}{{end}}/>
+                <span class="font-medium text-xs text-slate-700">Sosial</span>
+              </label>
+              <label class="team-opt flex items-center gap-2 p-2.5 border border-slate-200 rounded-lg hover:bg-brand-50 hover:border-brand-300 transition cursor-pointer">
+                <input type="checkbox" name="teams" value="neraca" class="accent-brand-600 w-4 h-4 flex-shrink-0"
+                  {{if .form}}{{range .form.teams}}{{if eq . "neraca"}}checked{{end}}{{end}}{{end}}/>
+                <span class="font-medium text-xs text-slate-700">Neraca</span>
+              </label>
+              <label class="team-opt flex items-center gap-2 p-2.5 border border-slate-200 rounded-lg hover:bg-brand-50 hover:border-brand-300 transition cursor-pointer">
+                <input type="checkbox" name="teams" value="umum" class="accent-brand-600 w-4 h-4 flex-shrink-0"
+                  {{if .form}}{{range .form.teams}}{{if eq . "umum"}}checked{{end}}{{end}}{{end}}/>
+                <span class="font-medium text-xs text-slate-700">Umum</span>
+              </label>
+            </div>
+            <p class="text-xs text-slate-400 mt-1.5">Tim digunakan untuk pengelompokan rekap barang</p>
           </div>
 
           <div class="bg-amber-50 border border-amber-200 text-amber-700 px-3 py-2.5 rounded-lg text-xs flex gap-2 items-start">

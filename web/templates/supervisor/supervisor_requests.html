@@ -56,6 +56,14 @@
       <span class="ml-auto bg-amber-400 text-amber-900 text-xs font-bold px-1.5 py-0.5 rounded-full">{{.stats.Pending}}</span>
       {{end}}{{end}}
     </a>
+    <a href="/supervisor/history" class="sl">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      History Stok
+    </a>
+    <a href="/supervisor/recap" class="sl">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Rekap
+    </a>
   </nav>
   <div class="px-3 py-4 border-t border-brand-700">
     <form action="/logout" method="POST">
@@ -145,7 +153,7 @@
                 {{end}}
                 <span class="flex items-center gap-1">
                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                  {{.Quantity}} unit
+                  {{.Quantity}} {{.ItemUnit}}
                 </span>
                 <span>{{formatDateTime .CreatedAt}}</span>
                 {{if and .ApprovedAt (ne .Status "pending")}}<span>Diproses: {{formatDateTime .ApprovedAt}}</span>{{end}}

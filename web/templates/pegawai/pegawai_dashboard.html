@@ -122,7 +122,7 @@
         <div class="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition">
           <div>
             <p class="font-semibold text-slate-800 text-sm">{{.ItemTitle}}</p>
-            <p class="text-slate-400 text-xs mt-0.5">{{.Quantity}} unit · {{formatDate .CreatedAt}}</p>
+            <p class="text-slate-400 text-xs mt-0.5">{{.Quantity}} {{.ItemUnit}} · {{formatDate .CreatedAt}}</p>
           </div>
           <span class="text-xs font-semibold px-2.5 py-1 rounded-full
             {{if eq .Status "pending"}}status-pending

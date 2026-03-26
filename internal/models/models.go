@@ -14,6 +14,7 @@ const (
 	TimIPDS       = "ipds"
 	TimSosial     = "sosial"
 	TimNeraca     = "neraca"
+	TimUmum       = "umum"
 )
 
 type User struct {

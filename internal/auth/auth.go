@@ -35,6 +35,7 @@ type RegisterInput struct {
 	Email    string
 	Password string
 	FullName string
+	Teams    []string
 }
 
 type LoginInput struct {
@@ -139,6 +140,11 @@ func Register(input RegisterInput) (*models.User, error) {
 	_, err = db.Exec(`INSERT INTO user_roles (user_id, role) VALUES ($1, $2)`, userID, models.RolePegawai)
 	if err != nil {
 		return nil, err
+	}
+
+	// Insert teams if provided
+	for _, team := range input.Teams {
+		db.Exec(`INSERT INTO user_teams (user_id, team) VALUES ($1, $2) ON CONFLICT DO NOTHING`, userID, team)
 	}
 
 	return GetUserByID(userID)
