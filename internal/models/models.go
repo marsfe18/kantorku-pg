@@ -2,14 +2,12 @@ package models
 
 import "time"
 
-// Role constants
 const (
 	RolePegawai    = "pegawai"
 	RoleSupervisor = "supervisor"
 	RoleAdmin      = "admin"
 )
 
-// Team constants
 const (
 	TimProduksi   = "produksi"
 	TimDistribusi = "distribusi"
@@ -18,7 +16,6 @@ const (
 	TimNeraca     = "neraca"
 )
 
-// User represents a user in the system
 type User struct {
 	ID         string    `db:"id"          json:"id"`
 	Username   string    `db:"username"    json:"username"`
@@ -51,16 +48,20 @@ func (u *User) HasTeam(team string) bool {
 	return false
 }
 
+// Item — ditambah ItemCode, Unit, InitialStock
 type Item struct {
-	ID          string    `db:"id"          json:"id"`
-	Title       string    `db:"title"       json:"title"`
-	Description string    `db:"description" json:"description"`
-	Stock       int       `db:"stock"       json:"stock"`
-	ImageURL    string    `db:"image_url"   json:"image_url"`
-	IsDeleted   bool      `db:"is_deleted"  json:"is_deleted"`
-	CreatedBy   string    `db:"created_by"  json:"created_by"`
-	CreatedAt   time.Time `db:"created_at"  json:"created_at"`
-	UpdatedAt   time.Time `db:"updated_at"  json:"updated_at"`
+	ID           string    `db:"id"            json:"id"`
+	ItemCode     string    `db:"item_code"     json:"item_code"`     // kode barang
+	Title        string    `db:"title"         json:"title"`
+	Description  string    `db:"description"   json:"description"`
+	Unit         string    `db:"unit"          json:"unit"`          // satuan: pcs, rim, box, dll
+	InitialStock int       `db:"initial_stock" json:"initial_stock"` // stok awal (bisa diedit)
+	Stock        int       `db:"stock"         json:"stock"`         // stok saat ini
+	ImageURL     string    `db:"image_url"     json:"image_url"`
+	IsDeleted    bool      `db:"is_deleted"    json:"is_deleted"`
+	CreatedBy    string    `db:"created_by"    json:"created_by"`
+	CreatedAt    time.Time `db:"created_at"    json:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at"    json:"updated_at"`
 }
 
 type Request struct {
@@ -70,6 +71,8 @@ type Request struct {
 	UserTeams  []string   `db:"-"           json:"user_teams"`
 	ItemID     string     `db:"item_id"     json:"item_id"`
 	ItemTitle  string     `db:"item_title"  json:"item_title"`
+	ItemCode   string     `db:"item_code"   json:"item_code"`
+	ItemUnit   string     `db:"item_unit"   json:"item_unit"`
 	Quantity   int        `db:"quantity"    json:"quantity"`
 	Status     string     `db:"status"      json:"status"`
 	Notes      string     `db:"notes"       json:"notes"`
@@ -83,7 +86,9 @@ type ItemHistory struct {
 	ID          string    `db:"id"           json:"id"`
 	ItemID      string    `db:"item_id"      json:"item_id"`
 	ItemTitle   string    `db:"item_title"   json:"item_title"`
-	ChangeType  string    `db:"change_type"  json:"change_type"`
+	ItemCode    string    `db:"item_code"    json:"item_code"`
+	ItemUnit    string    `db:"item_unit"    json:"item_unit"`
+	ChangeType  string    `db:"change_type"  json:"change_type"` // add, reduce, delete, stock_add
 	ChangeQty   int       `db:"change_qty"   json:"change_qty"`
 	StockBefore int       `db:"stock_before" json:"stock_before"`
 	StockAfter  int       `db:"stock_after"  json:"stock_after"`

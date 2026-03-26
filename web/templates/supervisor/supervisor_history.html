@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{.title}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Plus Jakarta Sans','sans-serif']},colors:{brand:{50:'#f0f7ff',100:'#e0effe',200:'#bae0fd',300:'#7cc5fb',400:'#38a5f6',500:'#0e87e3',600:'#0269c1',700:'#03539c',800:'#074680',900:'#0c3b6a',950:'#082549'}}}}}</script>
+  <style>
+    body{font-family:'Plus Jakarta Sans',sans-serif;}
+    .sl{display:flex;align-items:center;gap:.75rem;padding:.625rem 1rem;border-radius:.5rem;font-size:.875rem;font-weight:500;transition:all .15s;color:#bae0fd;}
+    .sl:hover{background:#074680;color:white;} .sl.active{background:white;color:#03539c;font-weight:600;}
+    #sb{transition:transform .25s;} #sb.hide{transform:translateX(-100%);}
+    #mc{transition:margin-left .25s;}
+    #ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:29;} #ov.show{display:block;}
+  </style>
+</head>
+<body class="bg-slate-50 antialiased">
+<div id="ov" onclick="tog()"></div>
+
+<aside id="sb" class="fixed inset-y-0 left-0 w-64 bg-brand-800 flex flex-col z-30">
+  <div class="flex items-center gap-3 px-6 py-5 border-b border-brand-700">
+    <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
+      <svg class="w-5 h-5 text-brand-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+    </div>
+    <div><div class="text-white font-bold text-base">KantorKu</div><div class="text-brand-300 text-xs">Pengelolaan Barang</div></div>
+  </div>
+  <div class="px-4 py-4 border-b border-brand-700">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-sm">{{if .user}}{{slice .user.FullName 0 1}}{{end}}</div>
+      <div class="min-w-0">
+        <div class="text-white text-sm font-semibold truncate">{{if .user}}{{.user.FullName}}{{end}}</div>
+        <div class="flex gap-1 mt-0.5 flex-wrap">{{if .claims}}{{range .claims.Roles}}<span class="text-xs bg-brand-600/60 text-brand-200 px-1.5 py-0.5 rounded">{{roleLabel .}}</span>{{end}}{{end}}</div>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+    <p class="text-brand-400 text-xs font-semibold uppercase tracking-wider px-4 mb-2">Menu Supervisor</p>
+    <a href="/supervisor/dashboard" class="sl"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
+    <a href="/supervisor/items" class="sl"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Kelola Barang</a>
+    <a href="/supervisor/requests" class="sl"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Permintaan Barang</a>
+    <a href="/supervisor/history" class="sl active"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>History Stok</a>
+    <a href="/supervisor/recap" class="sl"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Rekap</a>
+  </nav>
+  <div class="px-3 py-4 border-t border-brand-700">
+    <form action="/logout" method="POST">
+      <button class="sl w-full text-left" style="color:#fca5a5" onmouseover="this.style.background='rgba(239,68,68,.15)'" onmouseout="this.style.background=''">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Keluar
+      </button>
+    </form>
+  </div>
+</aside>
+
+<main id="mc" class="ml-64 min-h-screen">
+  <header class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-20 flex items-center gap-3">
+    <button onclick="tog()" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div>
+      <h1 class="font-bold text-slate-800 text-lg">History Stok Barang</h1>
+      <p class="text-slate-400 text-xs">Semua pergerakan stok — penambahan, pengurangan, dan penghapusan</p>
+    </div>
+  </header>
+
+  <div class="p-6">
+
+    <!-- Filter bar -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-5 flex flex-wrap gap-3 items-end">
+      <!-- Filter barang -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Filter Barang</label>
+        <select id="filter-item" onchange="applyFilter()" class="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 min-w-48">
+          <option value="">Semua Barang</option>
+          {{range .allItems}}
+          <option value="{{.ID}}" {{if eq .ID $.filterItemID}}selected{{end}}>{{.ItemCode}} — {{.Title}}</option>
+          {{end}}
+        </select>
+      </div>
+      <!-- Filter tipe -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Tipe Perubahan</label>
+        <select id="filter-type" onchange="applyFilter()" class="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50">
+          <option value="">Semua Tipe</option>
+          <option value="add">Stok Awal / Koreksi Masuk</option>
+          <option value="stock_add">Penambahan Stok</option>
+          <option value="reduce">Pengurangan (Permintaan)</option>
+          <option value="delete">Barang Dinonaktifkan</option>
+        </select>
+      </div>
+      <!-- Search -->
+      <div class="flex-1 min-w-48">
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Cari</label>
+        <div class="relative">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" id="search" placeholder="Cari nama / kode barang / pelaku..." oninput="applyFilter()" class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 focus:bg-white"/>
+        </div>
+      </div>
+      <!-- Count badge -->
+      <div class="text-sm text-slate-500 py-2">
+        Menampilkan <span id="count-badge" class="font-bold text-slate-700">{{len .history}}</span> dari {{len .history}} entri
+      </div>
+    </div>
+
+    <!-- History table -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-100">
+              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Waktu</th>
+              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Kode</th>
+              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Nama Barang</th>
+              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Tipe</th>
+              <th class="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Sebelum</th>
+              <th class="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Perubahan</th>
+              <th class="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Sesudah</th>
+              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Keterangan</th>
+              <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Pelaku</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody" class="divide-y divide-slate-100">
+            {{if .history}}
+            {{range .history}}
+            <tr class="hist-row hover:bg-slate-50 transition"
+                data-item="{{.ItemID}}"
+                data-type="{{.ChangeType}}"
+                data-search="{{.ItemTitle}} {{.ItemCode}} {{.ActorName}} {{.Reason}}">
+              <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{{formatDateTime .CreatedAt}}</td>
+              <td class="px-4 py-3">
+                <span class="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded">{{.ItemCode}}</span>
+              </td>
+              <td class="px-4 py-3">
+                <p class="text-sm font-medium text-slate-800 max-w-40 truncate">{{.ItemTitle}}</p>
+                <p class="text-xs text-slate-400">{{.ItemUnit}}</p>
+              </td>
+              <td class="px-4 py-3">
+                {{if eq .ChangeType "add"}}
+                <span class="inline-flex items-center gap-1 text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                  Stok Awal
+                </span>
+                {{else if eq .ChangeType "stock_add"}}
+                <span class="inline-flex items-center gap-1 text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                  Tambah Stok
+                </span>
+                {{else if eq .ChangeType "reduce"}}
+                <span class="inline-flex items-center gap-1 text-xs font-semibold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"/></svg>
+                  Keluar
+                </span>
+                {{else if eq .ChangeType "delete"}}
+                <span class="inline-flex items-center gap-1 text-xs font-semibold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  Dihapus
+                </span>
+                {{else}}
+                <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{{.ChangeType}}</span>
+                {{end}}
+              </td>
+              <td class="px-4 py-3 text-right text-sm text-slate-600">{{.StockBefore}}</td>
+              <td class="px-4 py-3 text-center">
+                {{if eq .ChangeType "delete"}}
+                <span class="text-xs text-slate-400 italic">—</span>
+                {{else if or (eq .ChangeType "add") (eq .ChangeType "stock_add")}}
+                <span class="font-bold text-green-600">+{{.ChangeQty}}</span>
+                {{else}}
+                <span class="font-bold text-red-500">−{{.ChangeQty}}</span>
+                {{end}}
+              </td>
+              <td class="px-4 py-3 text-right text-sm font-semibold text-slate-800">{{.StockAfter}}</td>
+              <td class="px-4 py-3 text-xs text-slate-500 max-w-48">
+                <p class="truncate" title="{{.Reason}}">{{.Reason}}</p>
+              </td>
+              <td class="px-4 py-3 text-xs text-slate-600">{{.ActorName}}</td>
+            </tr>
+            {{end}}
+            {{else}}
+            <tr>
+              <td colspan="9" class="px-6 py-14 text-center text-slate-400">
+                <svg class="w-10 h-10 mx-auto mb-3 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="font-medium">Belum ada history stok</p>
+              </td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  // Sidebar
+  let open = window.innerWidth >= 768;
+  function tog() { open = !open; applyS(); }
+  function applyS() {
+    const s=document.getElementById('sb'),m=document.getElementById('mc'),o=document.getElementById('ov'),mob=window.innerWidth<768;
+    if(open){s.classList.remove('hide');o.classList.toggle('show',mob);m.style.marginLeft=mob?'0':'16rem';}
+    else{s.classList.add('hide');o.classList.remove('show');m.style.marginLeft='0';}
+  }
+  window.addEventListener('resize',()=>{open=window.innerWidth>=768;applyS();});
+  applyS();
+
+  // Filter
+  function applyFilter() {
+    const itemFilter = document.getElementById('filter-item').value;
+    const typeFilter = document.getElementById('filter-type').value;
+    const search = document.getElementById('search').value.toLowerCase();
+    let visible = 0;
+
+    document.querySelectorAll('.hist-row').forEach(row => {
+      const matchItem = !itemFilter || row.dataset.item === itemFilter;
+      const matchType = !typeFilter || row.dataset.type === typeFilter;
+      const matchSearch = !search || row.dataset.search.toLowerCase().includes(search);
+      const show = matchItem && matchType && matchSearch;
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    document.getElementById('count-badge').textContent = visible;
+  }
+
+  // Pre-apply filter if item_id in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('item_id')) {
+    document.getElementById('filter-item').value = urlParams.get('item_id');
+    applyFilter();
+  }
+</script>
+</body>
+</html>

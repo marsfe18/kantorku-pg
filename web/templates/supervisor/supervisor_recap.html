@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{.title}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Plus Jakarta Sans','sans-serif']},colors:{brand:{50:'#f0f7ff',100:'#e0effe',200:'#bae0fd',300:'#7cc5fb',400:'#38a5f6',500:'#0e87e3',600:'#0269c1',700:'#03539c',800:'#074680',900:'#0c3b6a',950:'#082549'}}}}}</script>
+  <style>
+    body{font-family:'Plus Jakarta Sans',sans-serif;}
+    .sl{display:flex;align-items:center;gap:.75rem;padding:.625rem 1rem;border-radius:.5rem;font-size:.875rem;font-weight:500;transition:all .15s;color:#bae0fd;}
+    .sl:hover{background:#074680;color:white;} .sl.active{background:white;color:#03539c;font-weight:600;}
+    #sb{transition:transform .25s;} #sb.hide{transform:translateX(-100%);}
+    #mc{transition:margin-left .25s;}
+    #ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:29;} #ov.show{display:block;}
+    th{white-space:nowrap;}
+  </style>
+</head>
+<body class="bg-slate-50 antialiased">
+<div id="ov" onclick="tog()"></div>
+<aside id="sb" class="fixed inset-y-0 left-0 w-64 bg-brand-800 flex flex-col z-30">
+  <div class="flex items-center gap-3 px-6 py-5 border-b border-brand-700">
+    <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-brand-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
+    <div><div class="text-white font-bold text-base">KantorKu</div><div class="text-brand-300 text-xs">Pengelolaan Barang</div></div>
+  </div>
+  <div class="px-4 py-4 border-b border-brand-700">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-sm">{{if .user}}{{slice .user.FullName 0 1}}{{end}}</div>
+      <div class="min-w-0">
+        <div class="text-white text-sm font-semibold truncate">{{if .user}}{{.user.FullName}}{{end}}</div>
+        <div class="flex gap-1 mt-0.5 flex-wrap">{{if .claims}}{{range .claims.Roles}}<span class="text-xs bg-brand-600/60 text-brand-200 px-1.5 py-0.5 rounded">{{roleLabel .}}</span>{{end}}{{end}}</div>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+    <p class="text-brand-400 text-xs font-semibold uppercase tracking-wider px-4 mb-2">Menu Supervisor</p>
+    <a href="/supervisor/dashboard" class="sl"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
+    <a href="/supervisor/items" class="sl"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Kelola Barang</a>
+    <a href="/supervisor/requests" class="sl"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Permintaan Barang</a>
+    <a href="/supervisor/history" class="sl"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>History Stok</a>
+    <a href="/supervisor/recap" class="sl active"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Rekap</a>
+  </nav>
+  <div class="px-3 py-4 border-t border-brand-700">
+    <form action="/logout" method="POST"><button class="sl w-full text-left" style="color:#fca5a5" onmouseover="this.style.background='rgba(239,68,68,.15)'" onmouseout="this.style.background=''"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Keluar</button></form>
+  </div>
+</aside>
+
+<main id="mc" class="ml-64 min-h-screen">
+  <header class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-20 flex items-center gap-3">
+    <button onclick="tog()" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <div><h1 class="font-bold text-slate-800 text-lg">Rekap Barang</h1><p class="text-slate-400 text-xs">Rekap permintaan dan persediaan barang per tim</p></div>
+  </header>
+
+  <div class="p-6">
+    <!-- Filter form -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-6">
+      <form method="GET" action="/supervisor/recap" class="flex flex-wrap items-end gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Jenis Rekap</label>
+          <div class="flex gap-4">
+            <label class="flex items-center gap-1.5 cursor-pointer text-sm text-slate-700">
+              <input type="radio" name="type" value="request" {{if eq .recapType "request"}}checked{{end}} class="accent-brand-600"/> Permintaan
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer text-sm text-slate-700">
+              <input type="radio" name="type" value="stock" {{if eq .recapType "stock"}}checked{{end}} class="accent-brand-600"/> Persediaan
+            </label>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Tahun</label>
+          <select name="year" class="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50">
+            {{range .years}}<option value="{{.}}" {{if eq . $.year}}selected{{end}}>{{.}}</option>{{end}}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Bulan</label>
+          <select name="month" class="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50">
+            {{range .months}}<option value="{{.val}}" {{if eq .val $.month}}selected{{end}}>{{.label}}</option>{{end}}
+          </select>
+        </div>
+        <button type="submit" class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>Tampilkan
+        </button>
+        <a href="/supervisor/recap/export?type={{.recapType}}&year={{.year}}&month={{.month}}"
+           class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg ml-auto">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Export Excel
+        </a>
+      </form>
+    </div>
+
+    {{if eq .recapType "request"}}
+    <div class="space-y-5">
+      {{if .hasReqData}}
+        {{range .reqRecapByTeam}}
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="bg-brand-50 border-b border-brand-100 px-6 py-3 flex items-center justify-between">
+            <h3 class="font-semibold text-brand-800 text-sm uppercase tracking-wide">Tim {{.Label}}</h3>
+            {{if .Rows}}<span class="text-xs text-brand-600 font-semibold">Total: {{.Total}}</span>{{end}}
+          </div>
+          {{if .Rows}}
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead><tr class="bg-slate-50 border-b border-slate-100">
+                <th class="text-left text-xs font-semibold text-slate-500 px-4 py-3 w-10">No</th>
+                <th class="text-left text-xs font-semibold text-slate-500 px-4 py-3">Kode Barang</th>
+                <th class="text-left text-xs font-semibold text-slate-500 px-4 py-3">Nama Barang</th>
+                <th class="text-left text-xs font-semibold text-slate-500 px-4 py-3">Satuan</th>
+                <th class="text-right text-xs font-semibold text-slate-500 px-4 py-3">Jumlah Diminta</th>
+              </tr></thead>
+              <tbody class="divide-y divide-slate-100">
+                {{range $i, $r := .Rows}}
+                <tr class="hover:bg-slate-50">
+                  <td class="px-4 py-3 text-sm text-slate-400">{{add $i 1}}</td>
+                  <td class="px-4 py-3"><span class="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded">{{$r.ItemCode}}</span></td>
+                  <td class="px-4 py-3 text-sm font-medium text-slate-800">{{$r.ItemTitle}}</td>
+                  <td class="px-4 py-3 text-sm text-slate-600">{{$r.ItemUnit}}</td>
+                  <td class="px-4 py-3 text-right font-bold text-slate-800">{{$r.Total}}</td>
+                </tr>
+                {{end}}
+              </tbody>
+              <tfoot><tr class="bg-slate-50 border-t border-slate-200">
+                <td colspan="4" class="px-4 py-2.5 text-xs font-bold text-slate-600 text-right">TOTAL</td>
+                <td class="px-4 py-2.5 text-right font-bold text-brand-700">{{.Total}}</td>
+              </tr></tfoot>
+            </table>
+          </div>
+          {{else}}
+          <p class="px-6 py-6 text-center text-slate-400 text-sm">Tidak ada permintaan dari Tim {{.Label}} pada periode ini</p>
+          {{end}}
+        </div>
+        {{end}}
+      {{else}}
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-6 py-14 text-center">
+        <svg class="w-10 h-10 text-slate-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <p class="text-slate-500 font-medium">Tidak ada data permintaan pada periode ini</p>
+      </div>
+      {{end}}
+    </div>
+
+    {{else}}
+    <div class="space-y-5">
+      {{if .hasStockData}}
+        {{range .stockRecapByTeam}}
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="bg-brand-50 border-b border-brand-100 px-6 py-3">
+            <h3 class="font-semibold text-brand-800 text-sm uppercase tracking-wide">Tim {{.Label}}</h3>
+          </div>
+          {{if .Rows}}
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead><tr class="bg-slate-50 border-b border-slate-100">
+                <th class="text-left text-xs font-semibold text-slate-500 px-4 py-3 w-10">No</th>
+                <th class="text-left text-xs font-semibold text-slate-500 px-4 py-3">Kode</th>
+                <th class="text-left text-xs font-semibold text-slate-500 px-4 py-3">Nama Barang</th>
+                <th class="text-left text-xs font-semibold text-slate-500 px-4 py-3">Satuan</th>
+                <th class="text-right text-xs font-semibold text-slate-500 px-4 py-3">Stok Awal</th>
+                <th class="text-right text-xs font-semibold text-green-600 px-4 py-3">Masuk</th>
+                <th class="text-right text-xs font-semibold text-red-500 px-4 py-3">Keluar</th>
+                <th class="text-right text-xs font-semibold text-slate-500 px-4 py-3">Stok Akhir</th>
+              </tr></thead>
+              <tbody class="divide-y divide-slate-100">
+                {{range $i, $r := .Rows}}
+                <tr class="hover:bg-slate-50">
+                  <td class="px-4 py-3 text-sm text-slate-400">{{add $i 1}}</td>
+                  <td class="px-4 py-3"><span class="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded">{{$r.ItemCode}}</span></td>
+                  <td class="px-4 py-3 text-sm font-medium text-slate-800">{{$r.ItemTitle}}</td>
+                  <td class="px-4 py-3 text-sm text-slate-600">{{$r.ItemUnit}}</td>
+                  <td class="px-4 py-3 text-right text-sm text-slate-700">{{$r.StockAwal}}</td>
+                  <td class="px-4 py-3 text-right text-sm font-semibold text-green-600">+{{$r.TotalMasuk}}</td>
+                  <td class="px-4 py-3 text-right text-sm font-semibold text-red-500">-{{$r.TotalKeluar}}</td>
+                  <td class="px-4 py-3 text-right font-bold text-slate-800">{{$r.StockAkhir}}</td>
+                </tr>
+                {{end}}
+              </tbody>
+            </table>
+          </div>
+          {{else}}
+          <p class="px-6 py-6 text-center text-slate-400 text-sm">Tidak ada data persediaan dari Tim {{.Label}} pada periode ini</p>
+          {{end}}
+        </div>
+        {{end}}
+      {{else}}
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-6 py-14 text-center">
+        <svg class="w-10 h-10 text-slate-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <p class="text-slate-500 font-medium">Tidak ada data persediaan pada periode ini</p>
+      </div>
+      {{end}}
+    </div>
+    {{end}}
+  </div>
+</main>
+
+<script>
+  let open = window.innerWidth >= 768;
+  function tog() { open = !open; applyS(); }
+  function applyS() {
+    const s=document.getElementById('sb'),m=document.getElementById('mc'),o=document.getElementById('ov'),mob=window.innerWidth<768;
+    if(open){s.classList.remove('hide');o.classList.toggle('show',mob);m.style.marginLeft=mob?'0':'16rem';}
+    else{s.classList.add('hide');o.classList.remove('show');m.style.marginLeft='0';}
+  }
+  window.addEventListener('resize',()=>{open=window.innerWidth>=768;applyS();});
+  applyS();
+</script>
+</body>
+</html>
